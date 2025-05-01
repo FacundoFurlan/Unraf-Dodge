@@ -7,11 +7,12 @@
         super("game");
         }
     
-        init() {
+        init(data) {
         // this is called before the scene is created
         // init variables
         // take data passed from other scenes
         // data object param {}
+            this.playerName = data.playerName;
         }
     
         preload() {
@@ -128,7 +129,7 @@
         this.gameOver = false;
 
         this.gameOverText = this.add.text(400,300, `GAME OVER`, {
-            fontSize: "64px",
+            fontSize: "24px",
             fill: "#fff"
         }).setOrigin(0.5,0.5).setVisible(false);
 
@@ -174,6 +175,7 @@
         );
 
         this.input.keyboard.on('keydown-R', () => this.scene.restart(), this); //AL PRESIONAR R RESETEAR
+        this.input.keyboard.on('keydown-ESC', () => this.scene.start("menu"), this); //AL PRESIONAR ESC SE VA AL MENU
         }
     
         update() {
@@ -221,33 +223,19 @@
             
                 this.player.setVelocity(vx, vy);
             } else {
-                this.gameOverText.setVisible(true);
+
             }
         }
     
         updateTimer(){
             if(!this.gameOver){
-            this.totalTime--;
-        
-            this.timerText.setText(`Time: ${this.totalTime}`)
-        
-            if(this.totalTime <= 0){
-                this.timerEvent.remove();
-                this.starTime.remove();
-                this.ringGroup.children.iterate((wallBall) => {
-                    if(wallBall.shotTime) {
-                        wallBall.shotTime.remove()
-                    }
-                })
-
-                this.physics.pause();
-        
-                this.player.setTint(0xb00000);
-
-                this.gameOverText.setVisible(true);
-        
-                this.gameOver = true
-            }
+                this.totalTime--;
+            
+                this.timerText.setText(`Time: ${this.totalTime}`)
+            
+                if(this.totalTime <= 0){
+                    this.finishGame()
+                }
             }
         }
 
@@ -265,19 +253,47 @@
             this.scoreText.setText(`Score: ${this.score}`);
 
             if(this.score < 0){
-                this.timerEvent.remove();
-                this.starTime.remove();
-                this.ringGroup.children.iterate((wallBall) => {
-                    if(wallBall.shotTime) {
-                        wallBall.shotTime.remove()
-                    }
-                })
-
-                this.physics.pause();
-            
-                this.player.setTint(0xff0000);
-
-                this.gameOver = true;
+                this.finishGame()
             }
+        }
+
+        finishGame(){
+            this.timerEvent.remove();
+            this.starTime.remove();
+            this.ringGroup.children.iterate((wallBall) => {
+                if(wallBall.shotTime) {
+                    wallBall.shotTime.remove()
+                }
+            })
+
+            this.physics.pause();
+        
+            this.player.setTint(0xff0000);
+
+            this.gameOver = true;
+
+            fetch("https://dodge-back.vercel.app/api/scores", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                  name: this.playerName,
+                  score: this.score
+                })
+              })
+              .then(async (res) => {
+                const message = await res.text(); // Obtener el mensaje enviado desde el servidor
+                this.gameOverText.setText(message)
+                this.gameOverText.setVisible(true)
+                console.log(message)
+              })
+              .catch(error => {
+                console.error("Error al guardar el puntaje:", error);
+                this.gameOverText.setText("error");
+                this.gameOverText.setVisible(true);
+              });
+
+
         }
     }
