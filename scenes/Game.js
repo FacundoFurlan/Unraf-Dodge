@@ -12,7 +12,12 @@
         // init variables
         // take data passed from other scenes
         // data object param {}
-            this.playerName = data.playerName;
+            this.playerName = this.registry.get("playerName");
+            this.level = this.registry.get("levelOfGame");
+            this.score = this.registry.get("playerScore");
+            this.ownedItems = this.registry.get("ownedItems") || [];
+            this.speed = 160;
+            this.isFrozen = false;
         }
     
         preload() {
@@ -52,6 +57,7 @@
         
             const wall = this.ringGroup.create(x, y, "wallCircle");
             wall.baseAngle = radians;
+            wall.canShoot = true;
         }
     
         // Crear el cuadrado de jugador --------------------------------------------------------------
@@ -91,40 +97,47 @@
         this.enemyBullets = this.physics.add.group();
 
         this.ringGroup.children.iterate((wallBall) => {
-
             wallBall.lastShotTime = 0;
 
             wallBall.shotTime = this.time.addEvent({
                 delay: Phaser.Math.Between(0, 10000), // Dispara cada 0 a 10 segundos
                 callback: () => {
-                const now = this.time.now;
-                if(now -wallBall.lastShotTime >= 2000){
-                    wallBall.lastShotTime = now;
+                    if(!wallBall.canShoot){
+                        return
+                    }
+                    const now = this.time.now;
+                    if(now -wallBall.lastShotTime >= 2000){
+                        wallBall.lastShotTime = now;
 
-                    const bullet = this.enemyBullets.create(wallBall.x, wallBall.y, "star"); // o podés usar una textura nueva si querés
-                    bullet.setScale(0.5);
-                    bullet.setCollideWorldBounds(false);
-                    bullet.setBounce(1);
-    
-                    // Dirección hacia el jugador
-                    const dir = new Phaser.Math.Vector2(
-                        this.player.x - wallBall.x,
-                        this.player.y - wallBall.y
-                    ).normalize();
-    
-                    bullet.setVelocity(dir.x * 150, dir.y * 150);
-                }
-                },
-                callbackScope: this,
-                loop: true,
+                        const bullet = this.enemyBullets.create(wallBall.x, wallBall.y, "star"); // o podés usar una textura nueva si querés
+                        bullet.setScale(0.5);
+                        bullet.body.onWorldBounds = true;
+                        bullet.setCollideWorldBounds(true); //Colisiona con bordes del mundo para desaparecer
+        
+                        // Dirección hacia el jugador
+                        const dir = new Phaser.Math.Vector2(
+                            this.player.x - wallBall.x,
+                            this.player.y - wallBall.y
+                        ).normalize();
+        
+                        bullet.setVelocity(dir.x * 150, dir.y * 150);
+                    }
+                    },
+                    callbackScope: this,
+                    loop: true,
             });
+        });
+
+        this.physics.world.on("worldbounds", (body) => { //desaparecen al colisionar con bordes del mundo
+            const bullet = body.gameObject;
+            if (this.enemyBullets.contains(bullet)) {
+                bullet.destroy();
+            }
         });
 
         //BOMBS, POINTS AND GAME OVER!! -------------------------------------------------------
 
         this.bombs = this.physics.add.group();
-    
-        this.score = 0;
 
         this.gameOver = false;
 
@@ -137,10 +150,15 @@
             fontSize: "32px",
             fill: "#fff",
         });
+
+        this.levelText = this.add.text(16, 550, `level: ${this.level}`, {
+            fontSize: "32px",
+            fill: "#fff",
+        });
     
         
         //TIMER --------------------------------------------------------------
-        this.totalTime = 90;
+        this.totalTime = 60;
 
         this.timerEvent = this.time.addEvent({
             delay: 1000,
@@ -174,23 +192,61 @@
             this
         );
 
+
+        //ITEMS!!!! -----------------------------------------------------------------
+        const sizeItem = this.ownedItems.find(item => item.name === "Tamaño");
+        const speedItem = this.ownedItems.find(item => item.name === "Velocidad");
+        const freezeItem = this.ownedItems.find(item => item.name === "Congelar");
+
+        if (sizeItem) {
+            // Reducir el tamaño del jugador basado en el nivel del objeto "Tamaño"
+            const scaleFactor = 1 - (sizeItem.lvl * 0.05); // Reducimos el tamaño un 5% por cada nivel
+            this.player.setScale(Math.max(scaleFactor, 0.1)); // Aseguramos que el tamaño no sea inferior al 10%
+        }
+
+        if (speedItem) {
+            const speedBonus = 10 * speedItem.lvl; // Aumentamos la velocidad un valor basado en el nivel
+            this.speed = 160 + speedBonus; // Velocidad base + bonus por el objeto
+        }
+
+        if (freezeItem) {
+            this.freezeDuration = 2000 + 2000*0.05*(freezeItem.lvl-1); // 2 segundos congelado
+            this.isFrozen = false;
+        
+            this.time.addEvent({
+                delay: 20000 - 20000*0.05*(freezeItem.lvl-1), // Cada 20 segundos
+                loop: true,
+                callback: () => {
+                    this.freezeRing();
+                    this.time.delayedCall(this.freezeDuration, () => {
+                        this.unfreezeRing();
+                    });
+                }
+            });
+        }
+
+        //KEYS --------------------------------------------------------------------------
         this.input.keyboard.on('keydown-R', () => this.scene.restart(), this); //AL PRESIONAR R RESETEAR
         this.input.keyboard.on('keydown-ESC', () => this.scene.start("menu"), this); //AL PRESIONAR ESC SE VA AL MENU
         }
     
+
+        //UPDATE -----------------------------------------------------------------
         update() {
             if(!this.gameOver){
+                if(!this.isFrozen){
+                    this.ringRotation += 0.003;
+                    this.ringGroup.children.iterate((wall) => {
+                    const angle = wall.baseAngle + this.ringRotation;
+                    const x = this.ringCenter.x + Math.cos(angle) * this.ringRadius;
+                    const y = this.ringCenter.y + Math.sin(angle) * this.ringRadius;
+    
+                    wall.setPosition(x, y);
+                    wall.body.updateFromGameObject(); // sincronizar con física
+                    });
+                }
+                
 
-                this.ringRotation += 0.003;
-
-                this.ringGroup.children.iterate((wall) => {
-                const angle = wall.baseAngle + this.ringRotation;
-                const x = this.ringCenter.x + Math.cos(angle) * this.ringRadius;
-                const y = this.ringCenter.y + Math.sin(angle) * this.ringRadius;
-
-                wall.setPosition(x, y);
-                wall.body.updateFromGameObject(); // sincronizar con física
-                });
 
 
 
@@ -213,12 +269,12 @@
                 }
             
                 // Hago el pitagoras para movimiento diagonal
-                const speed = 160;
+
                 const magnitude = Math.hypot(vx, vy); // Equivalente a sqrt(vx^2 + vy^2)
         
                 if (magnitude > 0) {
-                vx = (vx / magnitude) * speed;
-                vy = (vy / magnitude) * speed;
+                vx = (vx / magnitude) * this.speed;
+                vy = (vy / magnitude) * this.speed;
                 }
             
                 this.player.setVelocity(vx, vy);
@@ -227,6 +283,27 @@
             }
         }
     
+        freezeRing() {
+            this.isFrozen = true;
+        
+            // Cambia color a azul y desactiva disparos
+            this.ringGroup.children.iterate((ball) => {
+                ball.canShoot = false;
+                ball.setTintFill(0x0000ff); // Azul
+            });
+        }
+        unfreezeRing() {
+            this.isFrozen = false;
+        
+            // Cambia color a rojo y reactiva disparos
+            this.ringGroup.children.iterate((ball) => {
+                ball.setTintFill(0xff0000); // Rojo
+                ball.canShoot = true;
+            });
+        }
+
+
+
         updateTimer(){
             if(!this.gameOver){
                 this.totalTime--;
@@ -242,8 +319,14 @@
         collectStar(player, star) {
             star.disableBody(true, true);
         
-            this.score += 10;
+            this.score += 1000;
             this.scoreText.setText(`Score: ${this.score}`);
+
+            if(this.score >= 10){
+                this.registry.set("levelOfGame", this.level+1);
+                this.registry.set("playerScore", this.score)
+                this.scene.start("shop")
+            }
         }
     
         hitBullet(player, bullet) {
@@ -265,6 +348,8 @@
                     wallBall.shotTime.remove()
                 }
             })
+            
+            this.registry.set("levelOfGame", 1);
 
             this.physics.pause();
         
