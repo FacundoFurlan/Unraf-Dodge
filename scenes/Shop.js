@@ -71,16 +71,16 @@ export default class Shop extends Phaser.Scene {
       this.highlightItem(this.selectedIndex);
     });
 
-    this.input.keyboard.on("keydown-SPACE", () => {
+    this.input.keyboard.on("keydown-ENTER", () => {
       this.buyItem();
     });
 
-    this.add.text(400, 500, "ENTER TO NEXT LEVEL", {
+    this.add.text(400, 500, "ESC TO NEXT LEVEL", {
       fontSize: "24px",
       color: "#ffffff"
     }).setOrigin(0.5);
 
-    this.input.keyboard.on("keydown-ENTER", () => this.scene.start("game"), this);
+    this.input.keyboard.on("keydown-ESC", () => this.scene.start("game"), this);
   }
 
   highlightItem(index) {

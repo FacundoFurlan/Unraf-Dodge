@@ -15,12 +15,12 @@ export default class Scoreboard extends Phaser.Scene {
         }).setOrigin(0.5);
     
         // Botón para volver al menú
-        this.add.text(400, 500, "SPACE TO MENU", {
+        this.add.text(400, 500, "ESC TO MENU", {
         fontSize: "24px",
         fill: "#ffffff",
         }).setOrigin(0.5);
     
-        this.input.keyboard.on("keydown-SPACE", () => {
+        this.input.keyboard.on("keydown-ESC", () => {
             this.scene.start("menu");
         });
         // Obtener los puntajes del back-end (API)

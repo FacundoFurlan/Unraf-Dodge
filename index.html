@@ -12,6 +12,62 @@
 
     <!-- Import a run main.js : load the game config and start first scene -->
     <script type="module" src="./main.js"></script>
+
+    <style>
+      body {
+        margin: 0;
+        padding-top: 32px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        background-color: #111;
+        color: white;
+        font-family: sans-serif;
+      }
+
+      #game-container {
+        margin-top: 20px;
+      }
+
+      #info {
+        margin-top: 20px;
+        max-width: 600px;
+        text-align: center;
+      }
+    </style>
   </head>
-  <body></body>
+
+  <body>
+    <div id="game-container" style="position: relative; width:800px; height: 600px; margin:auto;"></div>
+
+    <!-- Línea divisoria -->
+    <hr style="border: none; border-top: 1px solid gray; width: 80%; margin: 40px auto 20px;"/>
+
+    <div id="info">
+      <p>For ages, the Circles ruled geometry.</p>
+      <p>They multiplied endlessly, tracing perfect paths around the world’s center: a square space—cold, sharp, and still.</p>
+      <p>The Circles saw the Square as a flaw: too rigid, too angular, unmoved by their endless spin. So they chose to erase it.</p>
+      <p>One by one, the Circles began to orbit, drawing closer. Ever since, they’ve launched fragments of themselves, trying to erase what doesn’t belong.</p>
+      <p>But the Square endures.</p>
+      <p>Not because it believes it can win, but because it is the last. The last to remember a time when all shapes coexisted. The last to hold a spark of forgotten symmetry.</p>
+      <p>Every second it survives is one more second that change might still be possible.</p>
+      <p>And though it knows the end is certain, it would rather fall with edges sharp than ever bend.</p>
+    </div>
+
+    <hr style="border: none; border-top: 1px solid gray; width: 80%; margin: 40px auto 20px;"/>
+
+    <div id="how-to-play" style="max-width: 600px; margin-top: 10px; margin-bottom: 40px; text-align: center; font-family: sans-serif; color: white; line-height: 1.6;">
+      <h2 style="font-size: 1.8em; margin-bottom: 16px; border-bottom: 1px solid gray; padding-bottom: 8px;">How to Play</h2>
+      <p>Use the <strong>arrow keys</strong> to move.</p>
+      <p>Press <strong>R</strong> to restart the level, and <strong>ESC</strong> to return to the menu.</p>
+      <p>Press <strong>ENTER</strong> to buy items.</p>
+    
+      <p>Collect <strong>150 points</strong> to level up.</p>
+      <p>If you want the game to end, you need to survive <strong>60 consecutive seconds</strong> in the same level.</p>
+    
+      <h2 style="font-size: 1.8em; margin-top: 32px; margin-bottom: 12px; border-bottom: 1px solid gray; padding-bottom: 4px;">Known Bugs</h2>
+      <p>Upgrades scale linearly, which breaks the game. In the future, they'll scale logarithmically to fix this issue.</p>
+      <p>When the game ends (either by time or player death), it checks if the player has enough points to enter the <strong>TOP 3</strong>. This check may take a few seconds. If the player presses <strong>ESC</strong> or <strong>R</strong> during that time, I’m not exactly sure what could happen — but probably nothing good. Interaction with those keys should be disabled during the process.</p>
+    </div>
+  </body>
 </html>

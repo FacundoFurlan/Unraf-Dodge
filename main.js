@@ -8,6 +8,7 @@ const config = {
   type: Phaser.AUTO,
   width: 800,
   height: 600,
+  parent: "game-container",
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
@@ -26,6 +27,9 @@ const config = {
       gravity: { y: 0 },
       debug: false,
     },
+  },
+  dom: {
+    createContainer: true      // habilita contenedor DOM dentro del canvas
   },
   // List of scenes to load
   // Only the first scene will be shown
