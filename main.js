@@ -1,7 +1,7 @@
 import Game from "./scenes/Game.js";
 import Menu from "./scenes/Menu.js";
 import Scoreboard from "./scenes/Scoreboard.js";
-import Shop from "./scenes/shop.js";
+import Shop from "./scenes/Shop.js";
 
 // Create a new Phaser config object
 const config = {
