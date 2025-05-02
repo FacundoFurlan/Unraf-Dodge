@@ -1,4 +1,4 @@
-import Shop from "./scenes/Shop.js";
+import Shop from "./scenes/Shasdasdop.js";
 import Game from "./scenes/Game.js";
 import Menu from "./scenes/Menu.js";
 import Scoreboard from "./scenes/Scoreboard.js";
