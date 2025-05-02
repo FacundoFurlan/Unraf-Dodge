@@ -18,6 +18,7 @@
             this.ownedItems = this.registry.get("ownedItems") || [];
             this.speed = 160;
             this.isFrozen = false;
+            this.scoreThisLvl = 0;
         }
     
         preload() {
@@ -146,7 +147,12 @@
             fill: "#fff"
         }).setOrigin(0.5,0.5).setVisible(false);
 
-        this.scoreText = this.add.text(16, 16, `Score: ${this.score}`, {
+        this.scoreText = this.add.text(630, 550, `${this.scoreThisLvl} / 100`, {
+            fontSize: "32px",
+            fill: "#fff",
+        });
+
+        this.coinText = this.add.text(16, 16, `Coins: ${this.score}`, {
             fontSize: "32px",
             fill: "#fff",
         });
@@ -319,10 +325,12 @@
         collectStar(player, star) {
             star.disableBody(true, true);
         
-            this.score += 1000;
-            this.scoreText.setText(`Score: ${this.score}`);
+            this.score += 10;
+            this.scoreThisLvl += 10;
+            this.scoreText.setText(`${this.scoreThisLvl} / 100`);
+            this.coinText.setText(`Coins: ${this.score}`);
 
-            if(this.score >= 10){
+            if(this.scoreThisLvl >= 100){
                 this.registry.set("levelOfGame", this.level+1);
                 this.registry.set("playerScore", this.score)
                 this.scene.start("shop")
@@ -333,7 +341,7 @@
             bullet.disableBody(true, true)
 
             this.score -= 10;
-            this.scoreText.setText(`Score: ${this.score}`);
+            this.coinText.setText(`Coins: ${this.score}`);
 
             if(this.score < 0){
                 this.finishGame()

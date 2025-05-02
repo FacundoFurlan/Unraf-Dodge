@@ -16,7 +16,7 @@ export default class Shop extends Phaser.Scene {
       color: "#ffffff",
     }).setOrigin(0.5);
 
-    this.scoreText = this.add.text(150, 30, `Score: ${this.score}`, {
+    this.scoreText = this.add.text(150, 30, `Coins: ${this.score}`, {
       fontSize: "32px",
       color: "#ffffff",
     }).setOrigin(0.5);
