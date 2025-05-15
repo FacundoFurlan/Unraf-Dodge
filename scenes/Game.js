@@ -16,7 +16,9 @@
             this.level = this.registry.get("levelOfGame");
             this.score = this.registry.get("playerScore");
             this.ownedItems = this.registry.get("ownedItems") || [];
+            this.totalTime = 60;
             this.speed = 160;
+            this.gameOver = false;
             this.isFrozen = false;
             this.scoreThisLvl = 0;
         }
@@ -24,6 +26,7 @@
         preload() {
         // load assets
         this.load.image("sky", "./public/assets/sky.png");
+        this.load.image("shield", "./public/assets/shield.webp");
         this.load.image("ground", "./public/assets/platform.png");
         this.load.image("star", "./public/assets/star.png");
         this.load.image("bomb", "./public/assets/bomb.png");
@@ -136,11 +139,7 @@
             }
         });
 
-        //BOMBS, POINTS AND GAME OVER!! -------------------------------------------------------
-
-        this.bombs = this.physics.add.group();
-
-        this.gameOver = false;
+        // POINTS AND GAME OVER!! -------------------------------------------------------
 
         this.gameOverText = this.add.text(400,300, `GAME OVER`, {
             fontSize: "24px",
@@ -164,7 +163,6 @@
     
         
         //TIMER --------------------------------------------------------------
-        this.totalTime = 60;
 
         this.timerEvent = this.time.addEvent({
             delay: 1000,
@@ -203,11 +201,44 @@
         const sizeItem = this.ownedItems.find(item => item.name === "Tamaño");
         const speedItem = this.ownedItems.find(item => item.name === "Velocidad");
         const freezeItem = this.ownedItems.find(item => item.name === "Congelar");
+        const bombItem = this.ownedItems.find(item => item.name === "Bomba")
+        const shieldItem = this.ownedItems.find(item => item.name === "Escudo")
+
+        this.shieldActive = false;            // Empieza inactivo
+        
+        if (shieldItem) {
+            this.shieldCooldown = 20000 - 20000*0.05*(shieldItem.lvl-1);         // 20 segundos
+            this.shieldActive = true;            // o activo
+            this.showShieldIndicator(true);
+
+            this.time.addEvent({
+                delay: this.shieldCooldown,
+                loop: true,
+                callback: () => {
+                    // Solo recarga si estaba inactivo
+                    if (!this.shieldActive) {
+                        this.shieldActive = true;
+                        this.showShieldIndicator(true);
+                    }
+                }
+            });
+        }
+
 
         if (sizeItem) {
             // Reducir el tamaño del jugador basado en el nivel del objeto "Tamaño"
             const scaleFactor = 1 - (sizeItem.lvl * 0.05); // Reducimos el tamaño un 5% por cada nivel
             this.player.setScale(Math.max(scaleFactor, 0.1)); // Aseguramos que el tamaño no sea inferior al 10%
+        }
+
+        if (bombItem) {
+            this.bombCooldown = 20000 - 20000*0.05*(bombItem.lvl-1); // 30 segundos - 5% por nivel del item
+            this.time.addEvent({
+                delay: this.bombCooldown,
+                callback: this.activateBomb,
+                callbackScope: this,
+                loop: true
+            });
         }
 
         if (speedItem) {
@@ -252,9 +283,9 @@
                     });
                 }
                 
-
-
-
+                if (this.shieldSprite) {
+                    this.shieldSprite.setPosition(this.player.x, this.player.y);
+                }
 
 
                 //Variables que avisan en que direccion va el pj
@@ -308,7 +339,14 @@
             });
         }
 
+        activateBomb() {
+            if (this.enemyBullets) {
+                this.enemyBullets.clear(true, true); // Elimina todos los proyectiles del grupo
+            }
 
+            // Opcional: Efecto visual o sonido de la bomba
+            this.cameras.main.flash(250, 255, 255, 0); // Efecto de pantalla roja
+        }
 
         updateTimer(){
             if(!this.gameOver){
@@ -340,6 +378,13 @@
         hitBullet(player, bullet) {
             bullet.disableBody(true, true)
 
+            if (this.shieldActive) {
+                // Consume el escudo en lugar de restar puntos
+                this.shieldActive = false;
+                this.showShieldIndicator(false);
+                return;
+            }
+
             this.score -= 10;
             this.coinText.setText(`Coins: ${this.score}`);
 
@@ -347,6 +392,21 @@
                 this.finishGame()
             }
         }
+
+        showShieldIndicator(on) {
+            if (on) {
+                if (!this.shieldSprite) {
+                    this.shieldSprite = this.add
+                    .image(this.player.x, this.player.y, 'shield')
+                    .setScale(0.05)
+                    .setDepth(10);
+                }
+                this.shieldSprite.setVisible(true);
+            } else if (this.shieldSprite) {
+                this.shieldSprite.setVisible(false);
+            }
+        }
+
 
         finishGame(){
             this.timerEvent.remove();

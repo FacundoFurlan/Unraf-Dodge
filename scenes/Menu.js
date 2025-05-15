@@ -26,12 +26,11 @@ export default class Menu extends Phaser.Scene {
           this.registry.set("playerScore", 0);
           // Objetos disponibles en la tienda
           const shopItems = [
-            { id: 1, name: "Dash", cost: 200, description: "Te permite dashear con iframes cada 3s" },
-            { id: 2, name: "Escudo", cost: 30, description: "Te protege del próximo hit" },
-            { id: 3, name: "Congelar", cost: 100, description: "Automáticamente congela a los círculos durante 0.5s cada 5s" },
-            { id: 4, name: "Velocidad", cost: 50, description: "Aumenta ligeramente la velocidad del cuadrado" },
-            { id: 5, name: "Tamaño", cost: 100, description: "Reduce ligeramente el tamaño del cuadrado" },
-            { id: 6, name: "Bomba", cost: 30, description: "Elimina todos los proyectiles del mapa" }
+            { id: 1, name: "Escudo", cost: 30, description: "Te protege del próximo hit" },
+            { id: 2, name: "Congelar", cost: 100, description: "Automáticamente congela a los círculos durante 0.5s cada 5s" },
+            { id: 3, name: "Velocidad", cost: 50, description: "Aumenta ligeramente la velocidad del cuadrado" },
+            { id: 4, name: "Tamaño", cost: 100, description: "Reduce ligeramente el tamaño del cuadrado" },
+            { id: 5, name: "Bomba", cost: 30, description: "Elimina todos los proyectiles del mapa" }
           ];
 
           this.registry.set("shopItems", shopItems);
