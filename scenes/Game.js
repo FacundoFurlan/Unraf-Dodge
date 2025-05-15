@@ -204,10 +204,19 @@
         const bombItem = this.ownedItems.find(item => item.name === "Bomba")
         const shieldItem = this.ownedItems.find(item => item.name === "Escudo")
 
+
         this.shieldActive = false;            // Empieza inactivo
         
         if (shieldItem) {
-            this.shieldCooldown = 20000 - 20000*0.05*(shieldItem.lvl-1);         // 20 segundos
+            const baseCooldown = 30000;   // 30 s
+            const Vmax        = 15000;    // reducción máxima 15 s
+            const Km          = 10;        // mitad de Vmax en nivel 3
+            const lvl         = shieldItem.lvl;
+
+            const reduction = (Vmax * lvl) / (Km + lvl);
+
+
+            this.shieldCooldown = baseCooldown - reduction;         // 20 segundos
             this.shieldActive = true;            // o activo
             this.showShieldIndicator(true);
 
@@ -226,13 +235,29 @@
 
 
         if (sizeItem) {
-            // Reducir el tamaño del jugador basado en el nivel del objeto "Tamaño"
-            const scaleFactor = 1 - (sizeItem.lvl * 0.05); // Reducimos el tamaño un 5% por cada nivel
-            this.player.setScale(Math.max(scaleFactor, 0.1)); // Aseguramos que el tamaño no sea inferior al 10%
+            const lvl = sizeItem.lvl;
+            const Vmax = 0.9;
+            const Km   = 10;
+            const reduction = (Vmax * lvl) / (Km + lvl);
+
+            let scaleFactor = 1 - reduction;
+
+            scaleFactor = Math.max(scaleFactor, 0.1);
+
+            this.player.setScale(scaleFactor);
         }
 
         if (bombItem) {
-            this.bombCooldown = 20000 - 20000*0.05*(bombItem.lvl-1); // 30 segundos - 5% por nivel del item
+            const baseCooldown = 30000;   // 30 s
+            const Vmax        = 15000;    // reducción máxima 15 s
+            const Km          = 10;        // mitad de Vmax en nivel 3
+            const lvl         = bombItem.lvl;
+
+            const reduction = (Vmax * lvl) / (Km + lvl);
+
+
+            this.bombCooldown = baseCooldown - reduction;
+
             this.time.addEvent({
                 delay: this.bombCooldown,
                 callback: this.activateBomb,
@@ -242,16 +267,30 @@
         }
 
         if (speedItem) {
-            const speedBonus = 10 * speedItem.lvl; // Aumentamos la velocidad un valor basado en el nivel
-            this.speed = 160 + speedBonus; // Velocidad base + bonus por el objeto
+            const baseSpeed = 160;       // velocidad base
+            const Vmax = 200;            // velocidad máxima adicional permitida
+            const Km = 10;               // control de escalado
+            const lvl = speedItem.lvl;
+
+            const speedBonus = (Vmax * lvl) / (Km + lvl); // fórmula
+
+            this.speed = baseSpeed + speedBonus;
         }
 
         if (freezeItem) {
-            this.freezeDuration = 2000 + 2000*0.05*(freezeItem.lvl-1); // 2 segundos congelado
+            const baseCooldown = 30000;   // 30 s
+            const Vmax        = 15000;    // reducción máxima 15 s
+            const Km          = 10;        // mitad de Vmax en nivel 3
+            const lvl         = freezeItem.lvl;
+
+            const reduction = (Vmax * lvl) / (Km + lvl);
+
+
+            this.freezeCooldown = baseCooldown - reduction;
             this.isFrozen = false;
         
             this.time.addEvent({
-                delay: 20000 - 20000*0.05*(freezeItem.lvl-1), // Cada 20 segundos
+                delay: this.freezeCooldown, // Cada 20 segundos
                 loop: true,
                 callback: () => {
                     this.freezeRing();
