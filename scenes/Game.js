@@ -6,18 +6,54 @@
         // the key will be used to start the scene by other scenes
         super("game");
         }
-    
+        
+        //AUX FUNCTIONS!!!!--------------------------------------------------------
+        calculateCooldown(baseCooldown,lvl, Vmax, Km){
+            const effectiveLvl = Math.max(lvl - 1, 0);
+            const reduction =  (Vmax * effectiveLvl) / (Km + effectiveLvl);
+            return (baseCooldown - reduction);
+        }
+
+
+        cleanMemory(){
+            if(this.shieldTimer){this.shieldTimer.remove();}
+            if(this.starTime){this.starTime.remove();}
+            if(this.timerEvent){this.timerEvent.remove();}
+
+            this.ringGroup.children.iterate((wallBall) => {
+                if(wallBall.shotTime) {
+                    wallBall.shotTime.remove()
+                }
+            })
+            
+            this.registry.set("levelOfGame", 1);
+            this.registry.set("playerScore", 0);
+            this.registry.set("ownedItems", []);
+
+            this.physics.pause();
+        
+            this.player.setTint(0xff0000);
+
+            this.gameOver = true;
+        }
+
+
         init(data) {
         // this is called before the scene is created
         // init variables
         // take data passed from other scenes
         // data object param {}
             this.playerName = this.registry.get("playerName");
+            console.log("Name: ", this.playerName);
             this.level = this.registry.get("levelOfGame");
+            console.log("lvl: ", this.level);
             this.score = this.registry.get("playerScore");
+            console.log("playerScore: ", this.score);
             this.ownedItems = this.registry.get("ownedItems") || [];
+            console.log("OwnedItems: ", this.ownedItems);
             this.totalTime = 60;
             this.speed = 160;
+            this.scaleFactor = 1;
             this.gameOver = false;
             this.isFrozen = false;
             this.scoreThisLvl = 0;
@@ -26,7 +62,6 @@
         preload() {
         // load assets
         this.load.image("sky", "./public/assets/sky.png");
-        this.load.image("shield", "./public/assets/shield.webp");
         this.load.image("ground", "./public/assets/platform.png");
         this.load.image("star", "./public/assets/star.png");
         this.load.image("bomb", "./public/assets/bomb.png");
@@ -126,9 +161,9 @@
         
                         bullet.setVelocity(dir.x * 150, dir.y * 150);
                     }
-                    },
-                    callbackScope: this,
-                    loop: true,
+                },
+                callbackScope: this,
+                loop: true,
             });
         });
 
@@ -208,19 +243,20 @@
         this.shieldActive = false;            // Empieza inactivo
         
         if (shieldItem) {
-            const baseCooldown = 30000;   // 30 s
-            const Vmax        = 15000;    // reducción máxima 15 s
-            const Km          = 10;        // mitad de Vmax en nivel 3
-            const lvl         = shieldItem.lvl;
+            if(this.shieldTimer){
+                this.shieldTimer.remove();
+            }
 
-            const reduction = (Vmax * lvl) / (Km + lvl);
+            if(this.shieldSprite){
+                this.shieldSprite.destroy();
+                this.shieldSprite = null;
+            }
 
-
-            this.shieldCooldown = baseCooldown - reduction;         // 20 segundos
-            this.shieldActive = true;            // o activo
+            this.shieldCooldown = this.calculateCooldown(30000, shieldItem.lvl, 15000, 10)
+            this.shieldActive = true;            // lo activo
             this.showShieldIndicator(true);
 
-            this.time.addEvent({
+            this.shieldTimer = this.time.addEvent({
                 delay: this.shieldCooldown,
                 loop: true,
                 callback: () => {
@@ -235,28 +271,18 @@
 
 
         if (sizeItem) {
-            const lvl = sizeItem.lvl;
-            const Vmax = 0.9;
-            const Km   = 10;
-            const reduction = (Vmax * lvl) / (Km + lvl);
+            this.scaleFactor = this.calculateCooldown(1,sizeItem.lvl, .9, 10)
 
-            let scaleFactor = 1 - reduction;
+            this.scaleFactor = Math.max(this.scaleFactor, 0.1);
 
-            scaleFactor = Math.max(scaleFactor, 0.1);
-
-            this.player.setScale(scaleFactor);
+            this.player.setScale(this.scaleFactor);
+            if(shieldItem){
+                this.shieldSprite.setScale(this.scaleFactor);
+            }
         }
 
         if (bombItem) {
-            const baseCooldown = 30000;   // 30 s
-            const Vmax        = 15000;    // reducción máxima 15 s
-            const Km          = 10;        // mitad de Vmax en nivel 3
-            const lvl         = bombItem.lvl;
-
-            const reduction = (Vmax * lvl) / (Km + lvl);
-
-
-            this.bombCooldown = baseCooldown - reduction;
+            this.bombCooldown = this.calculateCooldown(30000,bombItem.lvl, 15000, 10)
 
             this.time.addEvent({
                 delay: this.bombCooldown,
@@ -278,17 +304,11 @@
         }
 
         if (freezeItem) {
-            const baseCooldown = 30000;   // 30 s
-            const Vmax        = 15000;    // reducción máxima 15 s
-            const Km          = 10;        // mitad de Vmax en nivel 3
-            const lvl         = freezeItem.lvl;
-
-            const reduction = (Vmax * lvl) / (Km + lvl);
-
-
-            this.freezeCooldown = baseCooldown - reduction;
+            this.freezeCooldown = this.calculateCooldown(30000,freezeItem.lvl, 15000, 10)
             this.isFrozen = false;
-        
+            this.freezeDuration = 3000;
+
+
             this.time.addEvent({
                 delay: this.freezeCooldown, // Cada 20 segundos
                 loop: true,
@@ -302,8 +322,15 @@
         }
 
         //KEYS --------------------------------------------------------------------------
-        this.input.keyboard.on('keydown-R', () => this.scene.restart(), this); //AL PRESIONAR R RESETEAR
-        this.input.keyboard.on('keydown-ESC', () => this.scene.start("menu"), this); //AL PRESIONAR ESC SE VA AL MENU
+        this.input.keyboard.on('keydown-R', () => {
+            this.cleanMemory();
+
+            this.scene.restart()
+        }, this); //AL PRESIONAR R RESETEAR
+        this.input.keyboard.on('keydown-ESC', () => {
+            this.cleanMemory()
+            this.scene.start("menu")
+        }, this); //AL PRESIONAR ESC SE VA AL MENU
         }
     
 
@@ -322,38 +349,39 @@
                     });
                 }
                 
-                if (this.shieldSprite) {
-                    this.shieldSprite.setPosition(this.player.x, this.player.y);
-                }
-
-
+                
+                
                 //Variables que avisan en que direccion va el pj
                 let vx = 0;
                 let vy = 0;
-            
+                
                 //Determino que direccion se toma dependiendo de botones presionados
                 if (this.cursors.left.isDown) {
-                vx = -1;
+                    vx = -1;
                 } else if (this.cursors.right.isDown) {
-                vx = 1;
+                    vx = 1;
                 }
-            
+                
                 if (this.cursors.up.isDown) {
-                vy = -1;
+                    vy = -1;
                 } else if (this.cursors.down.isDown) {
-                vy = 1;
+                    vy = 1;
                 }
-            
+                
                 // Hago el pitagoras para movimiento diagonal
-
+                
                 const magnitude = Math.hypot(vx, vy); // Equivalente a sqrt(vx^2 + vy^2)
-        
+                
                 if (magnitude > 0) {
-                vx = (vx / magnitude) * this.speed;
-                vy = (vy / magnitude) * this.speed;
+                    vx = (vx / magnitude) * this.speed;
+                    vy = (vy / magnitude) * this.speed;
                 }
-            
+                
                 this.player.setVelocity(vx, vy);
+
+                if (this.shieldSprite) {
+                    this.shieldSprite.setPosition(this.player.x, this.player.y);
+                }
             } else {
 
             }
@@ -402,8 +430,8 @@
         collectStar(player, star) {
             star.disableBody(true, true);
         
-            this.score += 10;
-            this.scoreThisLvl += 10;
+            this.score += 1000;
+            this.scoreThisLvl += 100;
             this.scoreText.setText(`${this.scoreThisLvl} / 100`);
             this.coinText.setText(`Coins: ${this.score}`);
 
@@ -435,11 +463,20 @@
         showShieldIndicator(on) {
             if (on) {
                 if (!this.shieldSprite) {
+                    const square = this.add.graphics();
+                    square.fillStyle(0x34eaed, 1);
+                    square.fillRect(0, 0, 40, 40);
+
+                    // Convertirlo en textura para usarlo con physics
+                    square.generateTexture('shield', 40, 40);
+                    square.destroy(); // ya no necesito el graphics
+
                     this.shieldSprite = this.add
                     .image(this.player.x, this.player.y, 'shield')
-                    .setScale(0.05)
-                    .setDepth(10);
+                    .setScale(this.scaleFactor)
+                    .setDepth(-1);
                 }
+                this.shieldSprite.setScale(this.scaleFactor)
                 this.shieldSprite.setVisible(true);
             } else if (this.shieldSprite) {
                 this.shieldSprite.setVisible(false);
@@ -448,21 +485,7 @@
 
 
         finishGame(){
-            this.timerEvent.remove();
-            this.starTime.remove();
-            this.ringGroup.children.iterate((wallBall) => {
-                if(wallBall.shotTime) {
-                    wallBall.shotTime.remove()
-                }
-            })
-            
-            this.registry.set("levelOfGame", 1);
-
-            this.physics.pause();
-        
-            this.player.setTint(0xff0000);
-
-            this.gameOver = true;
+            this.cleanMemory()
 
             fetch("https://dodge-back.vercel.app/api/scores", {
                 method: "POST",

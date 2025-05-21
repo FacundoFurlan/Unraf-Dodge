@@ -67,7 +67,7 @@ export default class Shop extends Phaser.Scene {
     });
 
     this.input.keyboard.on("keydown-RIGHT", () => {
-      this.selectedIndex = Math.min(2, this.selectedIndex + 1);
+      this.selectedIndex = Math.min(this.displayedShopItems.length - 1, this.selectedIndex + 1);
       this.highlightItem(this.selectedIndex);
     });
 
@@ -109,11 +109,12 @@ export default class Shop extends Phaser.Scene {
 
     this.score = this.score - selectedItem.cost;
     this.registry.set("playerScore", this.score);
-    this.scoreText.setText(`Score: ${this.score}`)
+    this.scoreText.setText(`Coins: ${this.score}`)
 
     const existing = ownedItems.find(i => i.id === selectedItem.id);
+    
     if (existing) {
-      existing.lvl = (existing.lvl || 1) + 1;
+      existing.lvl = existing.lvl + 1;
     } else {
       ownedItems.push({ ...selectedItem, lvl: 1 });
     }
