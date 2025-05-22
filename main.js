@@ -5,7 +5,7 @@ import Scoreboard from "./scenes/Scoreboard.js";
 
 // Create a new Phaser config object
 const config = {
-  type: Phaser.AUTO,
+  type: Phaser.WEBGL,
   width: 800,
   height: 600,
   parent: "game-container",
