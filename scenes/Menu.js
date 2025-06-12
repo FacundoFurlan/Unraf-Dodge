@@ -11,7 +11,7 @@ export default class Menu extends Phaser.Scene {
   
     create() {
       //SFX
-      this.selectSound = this.sound.add("select");
+      this.selectSound = this.sound.add("select", {volume: .1}); //con objeto de configuracion para que no me rompa el oido
       
       //EFFECTS
       const postFxPlugin = this.plugins.get('rexcrtpipelineplugin');

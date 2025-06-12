@@ -74,9 +74,13 @@ export default class Game extends Phaser.Scene {
     }
 
     preload() {
-      this.load.plugin('rexcrtpipelineplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexcrtpipelineplugin.min.js', true);
-      this.load.plugin('rexglowfilterpipelineplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexglowfilterpipelineplugin.min.js', true);
+        this.load.plugin('rexcrtpipelineplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexcrtpipelineplugin.min.js', true);
+        this.load.plugin('rexglowfilterpipelineplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexglowfilterpipelineplugin.min.js', true);
        
+        //Sounds
+        this.load.audio("select", "./public/assets/retroSelect.mp3")  
+        this.load.audio("coinSound", "./public/assets/retroCoin.mp3")  
+
 
         // load assets
         this.load.image("sky", "./public/assets/sky.png");
@@ -90,6 +94,9 @@ export default class Game extends Phaser.Scene {
     }
 
     create() {
+        //Sounds
+        this.selectSound = this.sound.add("select", {volume: .1}); //con objeto de configuracion para que no me rompa el oido
+        this.coinSound = this.sound.add("coinSound", {volume: .1}); //con objeto de configuracion para que no me rompa el oido
         //EFFECTS
         const postFxPlugin = this.plugins.get('rexcrtpipelineplugin');
         const glowPlugin  = this.plugins.get('rexglowfilterpipelineplugin');
@@ -579,6 +586,9 @@ export default class Game extends Phaser.Scene {
 
     collectStar(player, star) {
         star.disableBody(true, true);
+        this.coinSound.play({
+            detune: Phaser.Math.FloatBetween(-1200,300)
+        });
     
         this.score += 30;
         this.scoreThisLvl += 10;
