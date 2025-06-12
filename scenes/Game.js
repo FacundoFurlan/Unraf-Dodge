@@ -66,7 +66,7 @@ export default class Game extends Phaser.Scene {
         console.log("OwnedItems: ", this.ownedItems);
         this.totalTime = 60;
         this.speed = 160;
-        this.bulletSpeed = 150 + this.level * 5;
+        this.bulletSpeed = 150 + this.level * 3;
         this.scaleFactor = 1;
         this.gameOver = false;
         this.isFrozen = false;
