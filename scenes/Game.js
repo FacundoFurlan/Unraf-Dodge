@@ -569,8 +569,8 @@ export default class Game extends Phaser.Scene {
     collectStar(player, star) {
         star.disableBody(true, true);
     
-        this.score += 1000;
-        this.scoreThisLvl += 100;
+        this.score += 10;
+        this.scoreThisLvl += 10;
         this.scoreText.setText(`${this.scoreThisLvl} / 100`);
         this.coinText.setText(`Coins: ${this.score}`);
 
