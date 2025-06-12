@@ -90,6 +90,7 @@ export default class Game extends Phaser.Scene {
     }
 
     create() {
+        //EFFECTS
         const postFxPlugin = this.plugins.get('rexcrtpipelineplugin');
         const glowPlugin  = this.plugins.get('rexglowfilterpipelineplugin');
 
@@ -636,7 +637,7 @@ export default class Game extends Phaser.Scene {
     finishGame(){
         this.cleanMemory()
 
-        fetch("https://dodge-back.vercel.app/api/scores", {
+        fetch("https://dodge-back.vercel.app/api/scores", { // todo esto es para guardar el top en el servidor
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -644,7 +645,7 @@ export default class Game extends Phaser.Scene {
             body: JSON.stringify({
                 name: this.playerName,
                 score: this.score,
-                lvl: this.lvl
+                lvl: this.level
             })
             })
             .then(async (res) => {

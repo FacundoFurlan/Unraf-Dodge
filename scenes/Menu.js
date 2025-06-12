@@ -4,11 +4,16 @@ export default class Menu extends Phaser.Scene {
     }
   
     preload() {
+      this.load.audio("select", "./public/assets/retroSelect.mp3")
       this.load.plugin('rexcrtpipelineplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexcrtpipelineplugin.min.js', true);
       this.load.plugin('rexglowfilterpipelineplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexglowfilterpipelineplugin.min.js', true);    
     }
   
     create() {
+      //SFX
+      this.selectSound = this.sound.add("select");
+      
+      //EFFECTS
       const postFxPlugin = this.plugins.get('rexcrtpipelineplugin');
       const glowPlugin  = this.plugins.get('rexglowfilterpipelineplugin');
 
@@ -47,6 +52,7 @@ export default class Menu extends Phaser.Scene {
           this.registry.set("playerName", playerName);
           this.registry.set("levelOfGame", 1);
           this.registry.set("playerScore", 0);
+          this.selectSound.play();
           // Objetos disponibles en la tienda
           const shopItems = [
             { id: 1, name: "Shield", cost: 150, description: "Te protege del próximo hit" },
@@ -83,6 +89,7 @@ export default class Menu extends Phaser.Scene {
       }).setOrigin(0.5);
 
       this.input.keyboard.on("keydown-ESC", () => {
+        this.selectSound.play();
         this.nameInput.destroy();              // quita el DOM Element
         this.scene.start("scoreboard");
       });
