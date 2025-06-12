@@ -140,7 +140,7 @@ export default class Game extends Phaser.Scene {
         graphicsWhite.generateTexture("whiteWallCircle", 20, 20); // 20x20 es el tamaño total
         graphicsWhite.destroy(); // ya no lo necesitamos
         
-        const numberOfBalls = Math.min(1 + Math.floor(this.level / 2), 15);
+        const numberOfBalls = Math.min(5 + Math.floor(this.level / 2), 20);
         const pase = 360 / numberOfBalls;
         this.ringGroup = this.physics.add.staticGroup();
 
