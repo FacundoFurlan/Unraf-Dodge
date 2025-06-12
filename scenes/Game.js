@@ -372,11 +372,11 @@ export default class Game extends Phaser.Scene {
         
         
         //ITEMS!!!! -----------------------------------------------------------------
-        const sizeItem = this.ownedItems.find(item => item.name === "Tamaño");
-        const speedItem = this.ownedItems.find(item => item.name === "Velocidad");
-        const freezeItem = this.ownedItems.find(item => item.name === "Congelar");
+        const sizeItem = this.ownedItems.find(item => item.name === "Size");
+        const speedItem = this.ownedItems.find(item => item.name === "Speed");
+        const freezeItem = this.ownedItems.find(item => item.name === "Freeze");
         const bombItem = this.ownedItems.find(item => item.name === "Bomba")
-        const shieldItem = this.ownedItems.find(item => item.name === "Escudo")
+        const shieldItem = this.ownedItems.find(item => item.name === "Shield")
         
         
         this.shieldActive = false;            // Empieza inactivo
