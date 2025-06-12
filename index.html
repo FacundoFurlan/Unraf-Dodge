@@ -14,6 +14,15 @@
     <script type="module" src="./main.js"></script>
 
     <style>
+      @font-face {
+        font-family: 'Saira';
+        src: url('/public/assets/Saira.ttf') format('truetype');
+        font-weight: normal;
+        font-style: normal;
+      }
+    </style>
+
+    <style>
       body {
         margin: 0;
         padding-top: 32px;
@@ -37,7 +46,7 @@
     </style>
   </head>
 
-  <body>
+  <body style="font-family: Saira;">
     <div id="game-container" style="position: relative; width:800px; height: 600px; margin:auto;"></div>
 
     <!-- Línea divisoria -->
@@ -56,7 +65,7 @@
 
     <hr style="border: none; border-top: 1px solid gray; width: 80%; margin: 40px auto 20px;"/>
 
-    <div id="how-to-play" style="max-width: 600px; margin-top: 10px; margin-bottom: 40px; text-align: center; font-family: sans-serif; color: white; line-height: 1.6;">
+    <div id="how-to-play" style="max-width: 600px; margin-top: 10px; margin-bottom: 40px; text-align: center; font-family: Saira; color: white; line-height: 1.6;">
       <h2 style="font-size: 1.8em; margin-bottom: 16px; border-bottom: 1px solid gray; padding-bottom: 8px;">How to Play</h2>
       <p>Use the <strong>arrow keys</strong> to move.</p>
       <p>Press <strong>R</strong> to restart the level, and <strong>ESC</strong> to return to the menu.</p>
@@ -66,9 +75,7 @@
       <p>If you want the game to end, you need to survive <strong>60 consecutive seconds</strong> in the same level.</p>
     
       <h2 style="font-size: 1.8em; margin-top: 32px; margin-bottom: 12px; border-bottom: 1px solid gray; padding-bottom: 4px;">Known Bugs</h2>
-      <p>Upgrades scale linearly, which breaks the game. In the future, they'll scale logarithmically to fix this issue.</p>
-      <p>Only the Velocity, Size, and Freeze upgrades are available. Buying any others will not grant any perks until further development.</p>
-      <p>When the game ends (either by time or player death), it checks if the player has enough points to enter the <strong>TOP 3</strong>. This check may take a few seconds. If the player presses <strong>ESC</strong> or <strong>R</strong> during that time, I’m not exactly sure what could happen — but probably nothing good. Interaction with those keys should be disabled during the process.</p>
+      <p>When the game ends (either by time or player death), it checks if the player has enough points to enter the <strong>TOP 3</strong>. This check may take a few seconds. If the player presses <strong>ESC</strong> or <strong>R</strong> during that time, I’m not exactly sure what could happen — but probably nothing good. Interaction with those keys should be disabled during this process but it still isn't.</p>
     </div>
   </body>
 </html>

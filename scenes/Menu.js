@@ -66,15 +66,18 @@ export default class Menu extends Phaser.Scene {
 
 
       this.add.text(400, 200, "DODGE", {
+        fontFamily: 'Saira',
         fontSize: "64px",
         fill: "#ffffff",
       }).setOrigin(0.5);
   
       this.add.text(400, 350, "ENTER TO START", {
+        fontFamily: 'Saira',
         fontSize: "24px",
         fill: "#ffffff",
       }).setOrigin(0.5);
       this.add.text(400, 420, "ESC TO SCOREBOARD", {
+        fontFamily: 'Saira',
         fontSize: "24px",
         fill: "#ffffff",
       }).setOrigin(0.5);

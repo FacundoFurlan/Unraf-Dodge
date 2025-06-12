@@ -38,16 +38,19 @@ export default class Shop extends Phaser.Scene {
 
 
     this.add.text(400, 60, "SHOP", {
+      fontFamily: 'Saira',
       fontSize: "32px",
       color: "#ffffff",
     }).setOrigin(0.5,0.5);
 
     this.scoreText = this.add.text(150, 60, `Coins: ${this.score}`, {
+      fontFamily: 'Saira',
       fontSize: "32px",
       color: "#ffffff",
     }).setOrigin(0.5,0.5);
 
     this.add.text(650, 60, `Level: ${this.level}`, {
+      fontFamily: 'Saira',
       fontSize: "32px",
       color: "#ffffff",
     }).setOrigin(0.5,0.5);
@@ -68,16 +71,19 @@ export default class Shop extends Phaser.Scene {
       const level = owned ? owned.lvl + 1 : 1;
 
       this.add.text(x, y, `${item.name} ${level > 1 ? level : ""}`, {
+        fontFamily: 'Saira',
         fontSize: "24px",
         color: "#ffffff",
       }).setOrigin(.5);
 
       this.add.text(x, y + 100, `${item.cost} points`, {
+        fontFamily: 'Saira',
         fontSize: "24px",
         color: "#ffffff",
       }).setOrigin(.5);
 
       const buyText = this.add.text(x, y + 200, `Buy`, {
+        fontFamily: 'Saira',
         fontSize: "24px",
         color: "#ffffff",
       }).setOrigin(.5);
@@ -102,6 +108,7 @@ export default class Shop extends Phaser.Scene {
     });
 
     this.add.text(400, 530, "ESC TO NEXT LEVEL", {
+      fontFamily: 'Saira',
       fontSize: "24px",
       color: "#ffffff"
     }).setOrigin(0.5);

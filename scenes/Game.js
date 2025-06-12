@@ -139,6 +139,11 @@ export default class Game extends Phaser.Scene {
         graphicsWhite.fillCircle(10, 10, 10); // círculo de radio 10 en (10,10)
         graphicsWhite.generateTexture("whiteWallCircle", 20, 20); // 20x20 es el tamaño total
         graphicsWhite.destroy(); // ya no lo necesitamos
+        let graphicsBlue = this.make.graphics({ x: 0, y: 0, add: false });
+        graphicsBlue.fillStyle(0x0000ff, 1);
+        graphicsBlue.fillCircle(10, 10, 10); // círculo de radio 10 en (10,10)
+        graphicsBlue.generateTexture("blueWallCircle", 20, 20); // 20x20 es el tamaño total
+        graphicsBlue.destroy(); // ya no lo necesitamos
         
         const numberOfBalls = Math.min(5 + Math.floor(this.level / 2), 20);
         const pase = 360 / numberOfBalls;
@@ -316,21 +321,25 @@ export default class Game extends Phaser.Scene {
         // POINTS AND GAME OVER!! -------------------------------------------------------
         
         this.gameOverText = this.add.text(400,300, `GAME OVER`, {
+            fontFamily: 'Saira',
             fontSize: "24px",
             fill: "#fff"
         }).setOrigin(0.5,0.5).setVisible(false);
         
-        this.scoreText = this.add.text(630, 550, `${this.scoreThisLvl} / 100`, {
+        this.scoreText = this.add.text(630, 520, `${this.scoreThisLvl} / 100`, {
+            fontFamily: 'Saira',
             fontSize: "32px",
             fill: "#fff",
         });
 
-        this.coinText = this.add.text(16, 16, `Coins: ${this.score}`, {
+        this.coinText = this.add.text(30, 16, `Coins: ${this.score}`, {
+            fontFamily: 'Saira',
             fontSize: "32px",
             fill: "#fff",
         });
         
-        this.levelText = this.add.text(16, 550, `level: ${this.level}`, {
+        this.levelText = this.add.text(30, 520, `Level: ${this.level}`, {
+            fontFamily: 'Saira',
             fontSize: "32px",
             fill: "#fff",
         });
@@ -346,6 +355,7 @@ export default class Game extends Phaser.Scene {
         });
         
         this.timerText = this.add.text(630,16, `Time: ${this.totalTime}`, {
+            fontFamily: 'Saira',
             fontSize: "32px",
             fill: "#fff"
         })
@@ -532,7 +542,7 @@ export default class Game extends Phaser.Scene {
         // Cambia color a azul y desactiva disparos
         this.ringGroup.children.iterate((ball) => {
             ball.canShoot = false;
-            ball.setTintFill(0x0000ff); // Azul
+            ball.setTexture("blueWallCircle"); // Azul
         });
     }
     unfreezeRing() {
@@ -540,7 +550,7 @@ export default class Game extends Phaser.Scene {
     
         // Cambia color a rojo y reactiva disparos
         this.ringGroup.children.iterate((ball) => {
-            ball.setTintFill(0xff0000); // Rojo
+            ball.setTexture(ball.type); // Rojo
             ball.canShoot = true;
         });
     }
