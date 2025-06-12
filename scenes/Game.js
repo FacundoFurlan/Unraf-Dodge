@@ -37,6 +37,19 @@ export default class Game extends Phaser.Scene {
         this.gameOver = true;
     }
 
+    getRandomWeighted(ballTypes) {
+        let totalWeight = ballTypes.reduce((sum, ball) => sum + ball.weight, 0);
+        let random = Phaser.Math.Between(1, totalWeight);
+        let runningSum = 0;
+        
+        for (let ball of ballTypes) {
+            runningSum += ball.weight;
+            if (random <= runningSum) {
+                return ball;
+            }
+        }
+    }
+
 
     init(data) {
     // this is called before the scene is created
@@ -53,6 +66,7 @@ export default class Game extends Phaser.Scene {
         console.log("OwnedItems: ", this.ownedItems);
         this.totalTime = 60;
         this.speed = 160;
+        this.bulletSpeed = 150 + this.level * 5;
         this.scaleFactor = 1;
         this.gameOver = false;
         this.isFrozen = false;
@@ -100,27 +114,93 @@ export default class Game extends Phaser.Scene {
         this.cameras.main.setBackgroundColor('#000000');
         
         // Círculos de colisión en forma de anillo ------------------------------------------------------------
-        const graphics = this.make.graphics({ x: 0, y: 0, add: false });
-        graphics.fillStyle(0xff0000, 1);
-        graphics.fillCircle(10, 10, 10); // círculo de radio 10 en (10,10)
-        graphics.generateTexture("wallCircle", 20, 20); // 20x20 es el tamaño total
-        graphics.destroy(); // ya no lo necesitamos
+        let graphicsRed = this.make.graphics({ x: 0, y: 0, add: false });
+        graphicsRed.fillStyle(0xff0000, 1);
+        graphicsRed.fillCircle(10, 10, 10); // círculo de radio 10 en (10,10)
+        graphicsRed.generateTexture("redWallCircle", 20, 20); // 20x20 es el tamaño total
+        graphicsRed.destroy(); // ya no lo necesitamos
+        let graphicsYellow = this.make.graphics({ x: 0, y: 0, add: false });
+        graphicsYellow.fillStyle(0xffff00, 1);
+        graphicsYellow.fillCircle(10, 10, 10); // círculo de radio 10 en (10,10)
+        graphicsYellow.generateTexture("yellowWallCircle", 20, 20); // 20x20 es el tamaño total
+        graphicsYellow.destroy(); // ya no lo necesitamos
+        let graphicsGreen = this.make.graphics({ x: 0, y: 0, add: false });
+        graphicsGreen.fillStyle(0x00ff00, 1);
+        graphicsGreen.fillCircle(10, 10, 10); // círculo de radio 10 en (10,10)
+        graphicsGreen.generateTexture("greenWallCircle", 20, 20); // 20x20 es el tamaño total
+        graphicsGreen.destroy(); // ya no lo necesitamos
+        let graphicsPurple = this.make.graphics({ x: 0, y: 0, add: false });
+        graphicsPurple.fillStyle(0xaa00ff, 1);
+        graphicsPurple.fillCircle(10, 10, 10); // círculo de radio 10 en (10,10)
+        graphicsPurple.generateTexture("purpleWallCircle", 20, 20); // 20x20 es el tamaño total
+        graphicsPurple.destroy(); // ya no lo necesitamos
+        let graphicsWhite = this.make.graphics({ x: 0, y: 0, add: false });
+        graphicsWhite.fillStyle(0xffffff, 1);
+        graphicsWhite.fillCircle(10, 10, 10); // círculo de radio 10 en (10,10)
+        graphicsWhite.generateTexture("whiteWallCircle", 20, 20); // 20x20 es el tamaño total
+        graphicsWhite.destroy(); // ya no lo necesitamos
         
-        
+        const numberOfBalls = Math.min(1 + Math.floor(this.level / 2), 15);
+        const pase = 360 / numberOfBalls;
         this.ringGroup = this.physics.add.staticGroup();
+
+        const ballStats = [
+            {name: "redWallCircle", unlockedAt: 1, cooldown: 2000},
+            {name: "yellowWallCircle", unlockedAt: 5, cooldown: 2000},
+            {name: "greenWallCircle", unlockedAt: 10, cooldown: 2000},
+            {name: "purpleWallCircle", unlockedAt: 15, cooldown: 1000},
+            {name: "whiteWallCircle", unlockedAt: 20, cooldown: 1000}
+        ]
+
+        let availableBalls = ballStats.filter(ball => this.level >= ball.unlockedAt);
         
+        console.log("available: ", availableBalls);
+        
+        let weightedBallTypes = availableBalls.map(ball => {
+            let baseBias = 0;
+            
+            // Mientras más nuevo el color, más rápido aumenta su probabilidad
+            switch (ball.name) {
+                case "redWallCircle":
+                    baseBias = Math.max(100 - (1 + this.level * 4), 20); // Nunca baja de 20
+                    break;
+                case "yellowWallCircle":
+                    baseBias = Math.max((1 + this.level - ball.unlockedAt) * 4, 0);
+                    break;
+                case "purpleWallCircle":
+                    baseBias = Math.max((1 + this.level - ball.unlockedAt) * 4, 0);
+                    break;
+                case "greenWallCircle":
+                    baseBias = Math.max((1 + this.level - ball.unlockedAt) * 4, 0);
+                    break;
+                case "whiteWallCircle":
+                    baseBias = Math.max((1 + this.level - ball.unlockedAt) * 4, 0);
+                    break;
+                default:
+                    baseBias = 0;
+            }
+                                    
+            return { key: ball.name, weight: baseBias, cooldown: ball.cooldown };
+        });
+                                
+        console.log("weighted: ", weightedBallTypes);
         this.ringCenter = { x: 400, y: 300 };
         this.ringRadius = 250;
         this.ringRotation = 0;
-        
-        for (let angle = 0; angle < 360; angle += 30) {
+
+        for (let i = 0; i < numberOfBalls; ++i) {
+            const angle = i * pase;
             const radians = Phaser.Math.DegToRad(angle);
             const x = this.ringCenter.x + Math.cos(radians) * this.ringRadius;
             const y = this.ringCenter.y + Math.sin(radians) * this.ringRadius;
-            
-            const wall = this.ringGroup.create(x, y, "wallCircle");
+
+            let randomType = this.getRandomWeighted(weightedBallTypes)
+            console.log("random type: ", randomType.key, " ", typeof(randomType.key));
+            const wall = this.ringGroup.create(x, y, randomType.key);
             wall.baseAngle = radians;
             wall.canShoot = true;
+            wall.type = randomType.key;
+            wall.cooldown = randomType.cooldown;
         }
         
         // Crear el cuadrado de jugador --------------------------------------------------------------
@@ -159,32 +239,66 @@ export default class Game extends Phaser.Scene {
         
         //BALAS ! ----------------------------------------------------------------
         this.enemyBullets = this.physics.add.group();
-        
+
+
         this.ringGroup.children.iterate((wallBall) => {
             wallBall.lastShotTime = 0;
             
             wallBall.shotTime = this.time.addEvent({
-                delay: Phaser.Math.Between(1, 10000), // Dispara cada 0 a 10 segundos
+                delay: wallBall.cooldown + Phaser.Math.Between(1, 1000), // agrega al cooldown entre 0 y 1 seg de cooldown para que sea mas caotico
                 callback: () => {
                     if(!wallBall.canShoot){
                         return
                     }
                     const now = this.time.now;
-                    if(now -wallBall.lastShotTime >= 2000){
-                        wallBall.lastShotTime = now;
-                        
-                        const bullet = this.enemyBullets.create(wallBall.x, wallBall.y, "star"); // o podés usar una textura nueva si querés
-                        bullet.setScale(0.5);
+
+                    wallBall.lastShotTime = now;
+                    
+                    // Calcular dirección hacia el jugador
+                    const baseDir = new Phaser.Math.Vector2(
+                        this.player.x - wallBall.x,
+                        this.player.y - wallBall.y
+                    ).normalize();
+
+                    if (wallBall.type === 'yellowWallCircle' || wallBall.type === "whiteWallCircle") {
+                        // Disparar dos balas en cono
+                        const angleOffset = Phaser.Math.DegToRad(15); // 15 grados a cada lado
+
+                        // Primera bala (izquierda)
+                        const leftDir = baseDir.clone().rotate(-angleOffset);
+                        const bulletLeft = this.enemyBullets.create(wallBall.x, wallBall.y, wallBall.type);
+                        bulletLeft.setScale(0.5);
+                        bulletLeft.body.onWorldBounds = true;
+                        bulletLeft.setCollideWorldBounds(true);
+                        bulletLeft.setVelocity(leftDir.x * this.bulletSpeed, leftDir.y * this.bulletSpeed);
+
+                        // Segunda bala (derecha)
+                        const rightDir = baseDir.clone().rotate(angleOffset);
+                        const bulletRight = this.enemyBullets.create(wallBall.x, wallBall.y, wallBall.type);
+                        bulletRight.setScale(0.5);
+                        bulletRight.body.onWorldBounds = true;
+                        bulletRight.setCollideWorldBounds(true);
+                        bulletRight.setVelocity(rightDir.x * this.bulletSpeed, rightDir.y * this.bulletSpeed);
+
+                        if(wallBall.type === "whiteWallCircle"){
+                            const bullet = this.enemyBullets.create(wallBall.x, wallBall.y, wallBall.type);
+                            bullet.setScale(0.5);
+                            bullet.body.onWorldBounds = true;
+                            bullet.setCollideWorldBounds(true);
+                            bullet.setVelocity(baseDir.x * this.bulletSpeed, baseDir.y * this.bulletSpeed);
+                        }
+
+                    } else {
+                        // Comportamiento normal para el resto
+                        const bullet = this.enemyBullets.create(wallBall.x, wallBall.y, wallBall.type);
+                        if(wallBall.type === "greenWallCircle"){
+                            bullet.setScale(2);
+                        } else {
+                            bullet.setScale(0.5);
+                        }
                         bullet.body.onWorldBounds = true;
-                        bullet.setCollideWorldBounds(true); //Colisiona con bordes del mundo para desaparecer
-                        
-                        // Dirección hacia el jugador
-                        const dir = new Phaser.Math.Vector2(
-                            this.player.x - wallBall.x,
-                            this.player.y - wallBall.y
-                        ).normalize();
-                        
-                        bullet.setVelocity(dir.x * 150, dir.y * 150);
+                        bullet.setCollideWorldBounds(true);
+                        bullet.setVelocity(baseDir.x * this.bulletSpeed, baseDir.y * this.bulletSpeed);
                     }
                 },
                 callbackScope: this,
@@ -356,10 +470,6 @@ export default class Game extends Phaser.Scene {
             this.cleanMemory()
             this.scene.start("menu")
         }, this); //AL PRESIONAR ESC SE VA AL MENU
-
-
-
-        // this.cameras.main.setPostPipeline('CRTPipeline');
 
     }
 
