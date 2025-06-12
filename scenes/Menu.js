@@ -49,10 +49,10 @@ export default class Menu extends Phaser.Scene {
           this.registry.set("playerScore", 0);
           // Objetos disponibles en la tienda
           const shopItems = [
-            { id: 1, name: "Escudo", cost: 150, description: "Te protege del próximo hit" },
-            { id: 2, name: "Congelar", cost: 100, description: "Automáticamente congela a los círculos durante 0.5s cada 5s" },
-            { id: 3, name: "Velocidad", cost: 150, description: "Aumenta ligeramente la velocidad del cuadrado" },
-            { id: 4, name: "Tamaño", cost: 150, description: "Reduce ligeramente el tamaño del cuadrado" },
+            { id: 1, name: "Shield", cost: 150, description: "Te protege del próximo hit" },
+            { id: 2, name: "Freeze", cost: 100, description: "Automáticamente congela a los círculos durante 0.5s cada 5s" },
+            { id: 3, name: "Speed", cost: 150, description: "Aumenta ligeramente la velocidad del cuadrado" },
+            { id: 4, name: "Size", cost: 150, description: "Reduce ligeramente el tamaño del cuadrado" },
             { id: 5, name: "Bomba", cost: 100, description: "Elimina todos los proyectiles del mapa" }
           ];
 
@@ -60,7 +60,7 @@ export default class Menu extends Phaser.Scene {
           this.registry.set("ownedItems", []); // Al principio, el jugador no tiene nada
           this.scene.start("game"); // pasar el nombre a la escena
       } else {
-          alert("Por favor, ingresá tu nombre.");
+          alert("Please, enter a name.");
       }
       });
 

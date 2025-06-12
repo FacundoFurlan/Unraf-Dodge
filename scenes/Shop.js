@@ -37,7 +37,7 @@ export default class Shop extends Phaser.Scene {
     });
 
 
-    this.add.text(400, 60, "TIENDA", {
+    this.add.text(400, 60, "SHOP", {
       fontSize: "32px",
       color: "#ffffff",
     }).setOrigin(0.5,0.5);
@@ -72,12 +72,12 @@ export default class Shop extends Phaser.Scene {
         color: "#ffffff",
       }).setOrigin(.5);
 
-      this.add.text(x, y + 100, `${item.cost} puntos`, {
+      this.add.text(x, y + 100, `${item.cost} points`, {
         fontSize: "24px",
         color: "#ffffff",
       }).setOrigin(.5);
 
-      const buyText = this.add.text(x, y + 200, `Comprar`, {
+      const buyText = this.add.text(x, y + 200, `Buy`, {
         fontSize: "24px",
         color: "#ffffff",
       }).setOrigin(.5);
@@ -149,6 +149,6 @@ export default class Shop extends Phaser.Scene {
     this.purchasedThisVisit.push(selectedItem.id);
 
     const buyText = this.shopText[this.selectedIndex];
-    buyText.setText("Comprado").setColor("#00ff00");
+    buyText.setText("Bought").setColor("#00ff00");
   }
 }

@@ -59,7 +59,7 @@ export default class Scoreboard extends Phaser.Scene {
         // Mostrar los puntajes
         let yPosition = 225;
         data.forEach((score, index) => {
-          this.add.text(400, yPosition, `${index + 1}. ${score.name} reached lvl ${score.lvl} with ${score.score} points!`, {
+          this.add.text(400, yPosition, `${index + 1}. ${score.name} got ${score.score} and reached ${score.lvl}`, {
             fontSize: "24px",
             fill: "#ffffff",
           }).setOrigin(0.5);
