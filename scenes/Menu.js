@@ -47,27 +47,28 @@ export default class Menu extends Phaser.Scene {
       // Detectar tecla SPACE solo si hay un nombre
       this.input.keyboard.on("keydown-ENTER", () => {
         const playerName = this.nameInput.node.value.trim();
-      if (playerName) {
+        if (playerName) {
           this.nameInput.destroy();              // quita el DOM Element
           this.registry.set("playerName", playerName);
           this.registry.set("levelOfGame", 1);
           this.registry.set("playerScore", 0);
           this.selectSound.play();
           // Objetos disponibles en la tienda
-          const shopItems = [
-            { id: 1, name: "Shield", cost: 150, description: "Te protege del próximo hit" },
-            { id: 2, name: "Freeze", cost: 100, description: "Automáticamente congela a los círculos durante 0.5s cada 5s" },
-            { id: 3, name: "Speed", cost: 150, description: "Aumenta ligeramente la velocidad del cuadrado" },
-            { id: 4, name: "Size", cost: 150, description: "Reduce ligeramente el tamaño del cuadrado" },
-            { id: 5, name: "Bomba", cost: 100, description: "Elimina todos los proyectiles del mapa" }
-          ];
+            const shopItems = [
+              { id: 1, name: "Shield", cost: 150, description: "Te protege del próximo hit" },
+              { id: 2, name: "Freeze", cost: 100, description: "Automáticamente congela a los círculos durante 0.5s cada 5s" },
+              { id: 3, name: "Speed", cost: 150, description: "Aumenta ligeramente la velocidad del cuadrado" },
+              { id: 4, name: "Size", cost: 150, description: "Reduce ligeramente el tamaño del cuadrado" },
+              { id: 5, name: "Bomba", cost: 100, description: "Elimina todos los proyectiles del mapa" }
+            ];
 
-          this.registry.set("shopItems", shopItems);
-          this.registry.set("ownedItems", []); // Al principio, el jugador no tiene nada
-          this.scene.start("game"); // pasar el nombre a la escena
-      } else {
-          alert("Please, enter a name.");
-      }
+            this.registry.set("shopItems", shopItems);
+            this.registry.set("ownedItems", []); // Al principio, el jugador no tiene nada
+            this.scene.start("game"); // pasar el nombre a la escena
+        } else {
+          this.selectSound.play();
+            alert("Please, enter a name.");
+        }
       });
 
 

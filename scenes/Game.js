@@ -37,6 +37,33 @@ export default class Game extends Phaser.Scene {
         this.gameOver = true;
     }
 
+    updateProgressBar(progress) {
+        this.progressBar.clear();
+
+        // Dibujar el borde
+        const borderThickness = 2;
+        this.progressBar.lineStyle(borderThickness, 0xffffff, 1);
+        this.progressBar.strokeRect(this.progressBarX, this.progressBarY, this.progressBarWidth, this.progressBarHeight);
+
+        // Dibujar la barra rellenada
+        let fillWidth = Phaser.Math.Clamp((progress / this.maxProgress) * this.progressBarWidth, 0, this.progressBarWidth);
+        this.progressBar.fillStyle(0x09ff09, 1); // Color verde
+        this.progressBar.fillRect(this.progressBarX, this.progressBarY, fillWidth, this.progressBarHeight);
+
+        // Dibujar divisiones
+        const divisions = 10; // Porque el progreso sube de 10 en 10 hasta 100
+        const divisionSpacing = this.progressBarWidth / divisions;
+
+        for (let i = 1; i < divisions; i++) { // Empieza en 1 para no dibujar en el borde izquierdo
+            const x = this.progressBarX + i * divisionSpacing;
+
+            this.progressBar.lineBetween(
+                x, this.progressBarY,              // Desde el borde superior
+                x, this.progressBarY + this.progressBarHeight // Hasta el borde inferior
+            );
+        }
+    }
+
     getRandomWeighted(ballTypes) {
         let totalWeight = ballTypes.reduce((sum, ball) => sum + ball.weight, 0);
         let random = Phaser.Math.Between(1, totalWeight);
@@ -71,6 +98,7 @@ export default class Game extends Phaser.Scene {
         this.gameOver = false;
         this.isFrozen = false;
         this.scoreThisLvl = 0;
+        this.loading = false;
     }
 
     preload() {
@@ -120,6 +148,17 @@ export default class Game extends Phaser.Scene {
 
         // FONDO DEL JUEGO -----------------------------------------------------------------------------
         this.cameras.main.setBackgroundColor('#000000');
+
+        this.currentProgress = this.scoreThisLvl;
+        this.maxProgress = 100; // Límite de progreso
+        this.progressBar = this.add.graphics();
+
+        // Posición y tamaño de la barra
+        this.progressBarX = 570;
+        this.progressBarY = 520;
+        this.progressBarWidth = 200;
+        this.progressBarHeight = 30;
+        this.updateProgressBar(this.currentProgress);
         
         // Círculos de colisión en forma de anillo ------------------------------------------------------------
         let graphicsRed = this.make.graphics({ x: 0, y: 0, add: false });
@@ -160,8 +199,8 @@ export default class Game extends Phaser.Scene {
         const ballStats = [
             {name: "redWallCircle", unlockedAt: 1, cooldown: 2000},
             {name: "yellowWallCircle", unlockedAt: 5, cooldown: 2000},
-            {name: "greenWallCircle", unlockedAt: 10, cooldown: 2000},
-            {name: "purpleWallCircle", unlockedAt: 15, cooldown: 1000},
+            {name: "greenWallCircle", unlockedAt: 10, cooldown: 3000},
+            {name: "purpleWallCircle", unlockedAt: 15, cooldown: 500},
             {name: "whiteWallCircle", unlockedAt: 20, cooldown: 1000}
         ]
 
@@ -311,7 +350,11 @@ export default class Game extends Phaser.Scene {
                         }
                         bullet.body.onWorldBounds = true;
                         bullet.setCollideWorldBounds(true);
-                        bullet.setVelocity(baseDir.x * this.bulletSpeed, baseDir.y * this.bulletSpeed);
+                        if(wallBall.type === "greenWallCircle"){
+                            bullet.setVelocity(baseDir.x * (this.bulletSpeed - 50), baseDir.y * (this.bulletSpeed - 50));
+                        } else {
+                            bullet.setVelocity(baseDir.x * this.bulletSpeed, baseDir.y * this.bulletSpeed);
+                        }
                     }
                 },
                 callbackScope: this,
@@ -333,12 +376,6 @@ export default class Game extends Phaser.Scene {
             fontSize: "24px",
             fill: "#fff"
         }).setOrigin(0.5,0.5).setVisible(false);
-        
-        this.scoreText = this.add.text(630, 520, `${this.scoreThisLvl} / 100`, {
-            fontFamily: 'Saira',
-            fontSize: "32px",
-            fill: "#fff",
-        });
 
         this.coinText = this.add.text(30, 16, `Coins: ${this.score}`, {
             fontFamily: 'Saira',
@@ -477,16 +514,26 @@ export default class Game extends Phaser.Scene {
                 }
             });
         }
-        
+        this.loadingText = this.add.text(400,300, `Loading Score...`, {
+            fontFamily: 'Saira',
+            fontSize: "24px",
+            fill: "#fff"
+        }).setOrigin(0.5,0.5).setVisible(false);
         //KEYS --------------------------------------------------------------------------
         this.input.keyboard.on('keydown-R', () => {
-            this.cleanMemory();
+            if(!this.loading){
+                this.cleanMemory();
+
+                this.scene.restart()
+            }
             
-            this.scene.restart()
         }, this); //AL PRESIONAR R RESETEAR
         this.input.keyboard.on('keydown-ESC', () => {
-            this.cleanMemory()
-            this.scene.start("menu")
+            if(!this.loading){
+                this.cleanMemory()
+                
+                this.scene.start("menu")
+            }
         }, this); //AL PRESIONAR ESC SE VA AL MENU
 
     }
@@ -592,7 +639,8 @@ export default class Game extends Phaser.Scene {
     
         this.score += 30;
         this.scoreThisLvl += 10;
-        this.scoreText.setText(`${this.scoreThisLvl} / 100`);
+        this.currentProgress = this.scoreThisLvl; // Sincronizás el progreso con el score
+        this.updateProgressBar(this.currentProgress);
         this.coinText.setText(`Coins: ${this.score}`);
 
         if(this.scoreThisLvl >= 100){
@@ -646,6 +694,8 @@ export default class Game extends Phaser.Scene {
 
     finishGame(){
         this.cleanMemory()
+        this.loading = true;
+        this.loadingText.setVisible(true)
 
         fetch("https://dodge-back.vercel.app/api/scores", { // todo esto es para guardar el top en el servidor
             method: "POST",
@@ -660,12 +710,16 @@ export default class Game extends Phaser.Scene {
             })
             .then(async (res) => {
             const message = await res.text(); // Obtener el mensaje enviado desde el servidor
+            this.loading = false;
+            this.loadingText.setVisible(false);
             this.gameOverText.setText(message)
             this.gameOverText.setVisible(true)
             console.log(message)
             })
             .catch(error => {
             console.error("Error al guardar el puntaje:", error);
+            this.loading = false;
+            this.loadingText.setVisible(false);
             this.gameOverText.setText("error");
             this.gameOverText.setVisible(true);
             });
