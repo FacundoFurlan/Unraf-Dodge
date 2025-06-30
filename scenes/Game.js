@@ -47,7 +47,7 @@ export default class Game extends Phaser.Scene {
 
         // Dibujar la barra rellenada
         let fillWidth = Phaser.Math.Clamp((progress / this.maxProgress) * this.progressBarWidth, 0, this.progressBarWidth);
-        this.progressBar.fillStyle(0x09ff09, 1); // Color verde
+        this.progressBar.fillStyle(0x8a8a8a, 1); // Color del relleno
         this.progressBar.fillRect(this.progressBarX, this.progressBarY, fillWidth, this.progressBarHeight);
 
         // Dibujar divisiones
@@ -108,6 +108,8 @@ export default class Game extends Phaser.Scene {
         //Sounds
         this.load.audio("select", "./public/assets/retroSelect.mp3")  
         this.load.audio("coinSound", "./public/assets/retroCoin.mp3")  
+        this.load.audio("damageSound", "./public/assets/retroDamage.mp3")  
+        this.load.audio("levelMusic", "./public/assets/levelMusic.ogg")  
 
 
         // load assets
@@ -122,9 +124,26 @@ export default class Game extends Phaser.Scene {
     }
 
     create() {
+        this.input.keyboard.manager.enabled = true;
         //Sounds
         this.selectSound = this.sound.add("select", {volume: .1}); //con objeto de configuracion para que no me rompa el oido
         this.coinSound = this.sound.add("coinSound", {volume: .1}); //con objeto de configuracion para que no me rompa el oido
+        this.damageSound = this.sound.add("damageSound", {volume: .1}); //con objeto de configuracion para que no me rompa el oido
+        // Verificamos si ya existe la música global
+        if (!this.registry.get("levelMusic")) {
+            const music = this.sound.add("levelMusic", { loop: true, volume: 0 });
+            music.play();
+
+            // Fade-in
+            this.tweens.add({
+            targets: music,
+            volume: 0.1,
+            duration: 5000,
+            ease: "Linear"
+            });
+
+            this.registry.set("levelMusic", music); // La guardamos para evitar duplicados
+        }
         //EFFECTS
         const postFxPlugin = this.plugins.get('rexcrtpipelineplugin');
         const glowPlugin  = this.plugins.get('rexglowfilterpipelineplugin');
@@ -263,12 +282,17 @@ export default class Game extends Phaser.Scene {
         // Convertirlo en textura para usarlo con physics
         square.generateTexture('player_square', 32, 32);
         square.destroy(); // ya no necesito el graphics
-        
-        this.player = this.physics.add.image(400, 300, 'player_square');
+        this.player = this.physics.add.image(400, this.level === 1 ? 350:300, 'player_square');
         this.player.setCollideWorldBounds(true);
 
 
         this.cursors = this.input.keyboard.createCursorKeys();
+        this.wasd = this.input.keyboard.addKeys({
+            up: Phaser.Input.Keyboard.KeyCodes.W,
+            down: Phaser.Input.Keyboard.KeyCodes.S,
+            left: Phaser.Input.Keyboard.KeyCodes.A,
+            right: Phaser.Input.Keyboard.KeyCodes.D
+        });
         
         //ESTRELLAS ------------------------------------------------------------------------------------
         this.stars = this.physics.add.group();
@@ -370,7 +394,35 @@ export default class Game extends Phaser.Scene {
         });
         
         // POINTS AND GAME OVER!! -------------------------------------------------------
-        
+        if(this.level === 1){
+            const centerX = this.cameras.main.width / 2;
+    
+            this.escText = this.add.text(centerX, 200, "ESC TO RETURN", {
+                fontFamily: 'Saira',
+                fontSize: "24px",
+                fill: "#ffffff",
+            }).setOrigin(0.5, 0);
+    
+            this.rText = this.add.text(centerX, 240, "R TO RELOAD", {
+                fontFamily: 'Saira',
+                fontSize: "24px",
+                fill: "#ffffff",
+            }).setOrigin(0.5, 0);
+    
+            this.moveText = this.add.text(centerX, 280, "WASD or ARROWS TO MOVE", {
+                fontFamily: 'Saira',
+                fontSize: "24px",
+                fill: "#ffffff",
+            }).setOrigin(0.5, 0);
+    
+            // Timer para esconderlos después de 5 segundos (5000 ms)
+            this.time.delayedCall(5000, () => {
+                this.escText.setVisible(false);
+                this.rText.setVisible(false);
+                this.moveText.setVisible(false);
+            });
+        }
+
         this.gameOverText = this.add.text(400,300, `GAME OVER`, {
             fontFamily: 'Saira',
             fontSize: "24px",
@@ -530,6 +582,11 @@ export default class Game extends Phaser.Scene {
         }, this); //AL PRESIONAR R RESETEAR
         this.input.keyboard.on('keydown-ESC', () => {
             if(!this.loading){
+                Object.values(this.wasd).forEach(key => {
+                    this.input.keyboard.removeKey(key.keyCode);
+                    this.input.keyboard.manager.enabled = false; // Desactiva el control de teclado global de Phaser
+                });
+
                 this.cleanMemory()
                 
                 this.scene.start("menu")
@@ -561,16 +618,16 @@ export default class Game extends Phaser.Scene {
             let vy = 0;
             
             //Determino que direccion se toma dependiendo de botones presionados
-            if (this.cursors.left.isDown) {
-                vx = -1;
-            } else if (this.cursors.right.isDown) {
-                vx = 1;
+            if (this.cursors.left.isDown || this.wasd.left.isDown) {
+            vx = -1;
+            } else if (this.cursors.right.isDown || this.wasd.right.isDown) {
+            vx = 1;
             }
-            
-            if (this.cursors.up.isDown) {
-                vy = -1;
-            } else if (this.cursors.down.isDown) {
-                vy = 1;
+
+            if (this.cursors.up.isDown || this.wasd.up.isDown) {
+            vy = -1;
+            } else if (this.cursors.down.isDown || this.wasd.down.isDown) {
+            vy = 1;
             }
             
             // Hago el pitagoras para movimiento diagonal
@@ -590,6 +647,26 @@ export default class Game extends Phaser.Scene {
         }
     }
     
+    showFloatingText(text, color, startX, startY, direction = 'up') {
+        const floatingText = this.add.text(startX, startY, text, {
+            fontFamily: 'Saira',
+            fontSize: '24px',
+            color: color,
+            stroke: "#000",
+            strokeThickness: 2
+        }).setOrigin(0.5);
+
+        const offset = direction === 'up' ? -30 : 30;
+
+        this.tweens.add({
+            targets: floatingText,
+            y: startY + offset,
+            alpha: 0,
+            duration: 1000,
+            ease: 'Power1',
+            onComplete: () => floatingText.destroy()
+        });
+    }
 
     freezeRing() {
         this.isFrozen = true;
@@ -636,7 +713,7 @@ export default class Game extends Phaser.Scene {
         this.coinSound.play({
             detune: Phaser.Math.FloatBetween(-1200,300)
         });
-    
+        this.showFloatingText("+30", "#00ff00", this.coinText.x+100 + this.coinText.width / 2, this.coinText.y + 40, "up");
         this.score += 30;
         this.scoreThisLvl += 10;
         this.currentProgress = this.scoreThisLvl; // Sincronizás el progreso con el score
@@ -653,13 +730,23 @@ export default class Game extends Phaser.Scene {
     hitBullet(player, bullet) {
         bullet.disableBody(true, true)
 
+
+
         if (this.shieldActive) {
             // Consume el escudo en lugar de restar puntos
+            this.damageSound.play({
+                detune: 2000
+            });
             this.shieldActive = false;
             this.showShieldIndicator(false);
             return;
         }
 
+        this.damageSound.play({
+            detune: Phaser.Math.FloatBetween(-1200,300)
+        });
+
+        this.showFloatingText("-10", "#ff0000", this.coinText.x+100 + this.coinText.width / 2, this.coinText.y, "down");
         this.score -= 10;
         this.coinText.setText(`Coins: ${this.score}`);
 
@@ -722,8 +809,6 @@ export default class Game extends Phaser.Scene {
             this.loadingText.setVisible(false);
             this.gameOverText.setText("error");
             this.gameOverText.setVisible(true);
-            });
-
-
+        });
     }
 }

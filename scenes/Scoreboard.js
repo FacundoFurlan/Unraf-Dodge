@@ -10,6 +10,7 @@ export default class Scoreboard extends Phaser.Scene {
     }
   
     create() {
+      this.input.keyboard.manager.enabled = true;
       this.selectSound = this.sound.add("select", {volume: .1}); //con objeto de configuracion para que no me rompa el oido
 
       const postFxPlugin = this.plugins.get('rexcrtpipelineplugin');
@@ -57,6 +58,7 @@ export default class Scoreboard extends Phaser.Scene {
   
       this.input.keyboard.on("keydown-ESC", () => {
         if(!this.loading){
+          this.input.keyboard.manager.enabled = false;
           this.selectSound.play();
           this.scene.start("menu");
         }
