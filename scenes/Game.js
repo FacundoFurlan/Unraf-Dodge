@@ -113,14 +113,7 @@ export default class Game extends Phaser.Scene {
 
 
         // load assets
-        this.load.image("sky", "./public/assets/sky.png");
-        this.load.image("ground", "./public/assets/platform.png");
         this.load.image("star", "./public/assets/star.png");
-        this.load.image("bomb", "./public/assets/bomb.png");
-        this.load.spritesheet("dude", "./public/assets/dude.png", {
-            frameWidth: 32,
-            frameHeight: 48,
-        });
     }
 
     create() {
@@ -423,6 +416,18 @@ export default class Game extends Phaser.Scene {
             });
         }
 
+        this.finalScoreText = this.add.text(400, 200, `Points`, {
+            fontFamily: 'Saira',
+            fontSize: "32px",
+            color: "#fff"
+        }).setOrigin(0.5).setVisible(false);
+
+        this.finalLevelText = this.add.text(400, 250, `Level`, {
+            fontFamily: 'Saira',
+            fontSize: "28px",
+            color: "#fff"
+        }).setOrigin(0.5).setVisible(false);
+
         this.gameOverText = this.add.text(400,300, `GAME OVER`, {
             fontFamily: 'Saira',
             fontSize: "24px",
@@ -498,7 +503,7 @@ export default class Game extends Phaser.Scene {
                 this.shieldSprite = null;
             }
             
-            this.shieldCooldown = this.calculateCooldown(30000, shieldItem.lvl, 15000, 10)
+            this.shieldCooldown = this.calculateCooldown(15000, shieldItem.lvl, 7500, 10)
             this.shieldActive = true;            // lo activo
             this.showShieldIndicator(true);
             
@@ -517,7 +522,7 @@ export default class Game extends Phaser.Scene {
         
         
         if (sizeItem) {
-            this.scaleFactor = this.calculateCooldown(1,sizeItem.lvl, .9, 10)
+            this.scaleFactor = this.calculateCooldown(1,sizeItem.lvl, .9, 5)
             
             this.scaleFactor = Math.max(this.scaleFactor, 0.1);
             
@@ -528,7 +533,11 @@ export default class Game extends Phaser.Scene {
         }
         
         if (bombItem) {
-            this.bombCooldown = this.calculateCooldown(30000,bombItem.lvl, 15000, 10)
+            this.bombCooldown = this.calculateCooldown(15000,bombItem.lvl, 7500, 10)
+
+            // Agregar variación aleatoria entre -10% y +10%
+            const variation = Phaser.Math.FloatBetween(0.9, 1.1);
+            this.bombCooldown = this.bombCooldown * variation;
             
             this.time.addEvent({
                 delay: this.bombCooldown,
@@ -540,7 +549,7 @@ export default class Game extends Phaser.Scene {
         
         if (speedItem) {
             const baseSpeed = 160;       // velocidad base
-            const Vmax = 200;            // velocidad máxima adicional permitida
+            const Vmax = 320;            // velocidad máxima adicional permitida
             const Km = 10;               // control de escalado
             const lvl = speedItem.lvl;
             
@@ -550,13 +559,16 @@ export default class Game extends Phaser.Scene {
         }
         
         if (freezeItem) {
-            this.freezeCooldown = this.calculateCooldown(30000,freezeItem.lvl, 15000, 10)
+            this.freezeCooldown = this.calculateCooldown(20000,freezeItem.lvl, 10000, 10)
             this.isFrozen = false;
             this.freezeDuration = 3000;
             
+            // Agregar variación aleatoria entre -10% y +10%
+            const variation = Phaser.Math.FloatBetween(0.9, 1.1);
+            this.freezeCooldown = this.freezeCooldown * variation;
             
             this.time.addEvent({
-                delay: this.freezeCooldown, // Cada 20 segundos
+                delay: this.freezeCooldown,
                 loop: true,
                 callback: () => {
                     this.freezeRing();
@@ -728,30 +740,46 @@ export default class Game extends Phaser.Scene {
     }
 
     hitBullet(player, bullet) {
-        bullet.disableBody(true, true)
+        const textureKey = bullet.texture.key;
+        console.log(bullet.x,"  ", bullet.y)
 
+        const emitter = this.add.particles(bullet.x, bullet.y, textureKey, {
+            speed: { min: -50, max: 50 },
+            angle: { min: 0, max: 360 },
+            scale: { start: 0.4, end: 0 },
+            alpha: { start: 1, end: 0 },
+            blendMode: 'NORMAL',
+            frequency: -1
+        });
 
+        emitter.explode(15);
+
+        this.time.delayedCall(800, () => {
+            emitter.destroy();
+        });
+
+        // Desactivar bala
+        bullet.disableBody(true, true);
 
         if (this.shieldActive) {
-            // Consume el escudo en lugar de restar puntos
-            this.damageSound.play({
-                detune: 2000
-            });
+            this.damageSound.play({ detune: 2000 });
             this.shieldActive = false;
+            this.cameras.main.shake(150, 0.005);
             this.showShieldIndicator(false);
             return;
         }
 
         this.damageSound.play({
-            detune: Phaser.Math.FloatBetween(-1200,300)
+            detune: Phaser.Math.FloatBetween(-1200, 300)
         });
+        this.cameras.main.shake(150, 0.005);
+        this.showFloatingText("-10", "#ff0000", this.coinText.x + 100 + this.coinText.width / 2, this.coinText.y, "down");
 
-        this.showFloatingText("-10", "#ff0000", this.coinText.x+100 + this.coinText.width / 2, this.coinText.y, "down");
-        this.score -= 10;
+        this.score = Math.max(0, this.score - 10);  
         this.coinText.setText(`Coins: ${this.score}`);
 
-        if(this.score < 0){
-            this.finishGame()
+        if (this.score <= 0 && !this.gameOver) {
+            this.finishGame();
         }
     }
 
@@ -779,8 +807,47 @@ export default class Game extends Phaser.Scene {
     }
 
 
-    finishGame(){
+    async finishGame(){
         this.cleanMemory()
+        this.escText.setVisible(false)
+        this.rText.setVisible(false)
+        this.moveText.setVisible(false)
+
+        // Mostrar score inicial y preparar animación
+        let tempScore = this.score;
+        let tempLevel = this.level;
+        let bonusScore = 0;
+
+        this.finalScoreText.setText(`Points: ${tempScore}`).setVisible(true);
+        this.finalLevelText.setText(`Level: ${tempLevel}`).setVisible(true);
+
+
+        // Función que simula la animación de sumar puntos por nivel
+        const animateScore = () => {
+            return new Promise(resolve => {
+                const interval = setInterval(() => {
+                    if (tempLevel > 0) {
+                        tempLevel--;
+                        const increment = Math.floor(this.score * 0.1); // 10% por nivel
+                        bonusScore += increment;
+                        tempScore += increment;
+
+                        this.finalScoreText.setText(`Points: ${tempScore}`);
+                        this.finalLevelText.setText(`Level: ${tempLevel}`);
+                    } else {
+                        clearInterval(interval);
+                        resolve(tempScore); // Puntaje final visual
+                    }
+                }, 200); // Velocidad de animación
+            });
+        };
+
+        // Ejecutar animación antes del fetch
+        const finalScore = await animateScore();
+
+
+
+
         this.loading = true;
         this.loadingText.setVisible(true)
 
@@ -791,7 +858,7 @@ export default class Game extends Phaser.Scene {
             },
             body: JSON.stringify({
                 name: this.playerName,
-                score: this.score,
+                score: finalScore,
                 lvl: this.level
             })
             })

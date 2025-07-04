@@ -43,7 +43,7 @@ export default class Scoreboard extends Phaser.Scene {
       }).setOrigin(0.5);
 
       // Título
-      this.titleText = this.add.text(400, 100, "TOP 3 SCOREBOARD", {
+      this.titleText = this.add.text(400, 100, "TOP 5 SCOREBOARD", {
         fontFamily: 'Saira',
         fontSize: "32px",
         fill: "#ffffff",
@@ -67,35 +67,68 @@ export default class Scoreboard extends Phaser.Scene {
       this.fetchScores();
     }
   
-    async fetchScores() {
-      try {
-        const response = await fetch("https://dodge-back.vercel.app/api/scores"); // Cambia esta URL por la de tu servidor
-        const data = await response.json();
-        console.log(data)
-  
-        // Mostrar los puntajes
-        let yPosition = 225;
-        data.forEach((score, index) => {
-          this.add.text(400, yPosition, `${index + 1}. ${score.name} got ${score.score} and reached ${score.lvl}`, {
-            fontFamily: 'Saira',
-            fontSize: "24px",
-            fill: "#ffffff",
-          }).setOrigin(0.5);
-          yPosition += 70;
-        });
-        this.loading = false;
-        this.loadingText.destroy(); // Oculta mensaje de carga
-        this.titleText.setVisible(true);
-        this.menuText.setVisible(true);
-      } catch (error) {
-        this.loading = false;
-        this.loadingText.destroy(); // Oculta mensaje de carga
-        console.error("Error fetching scores:", error);
-        this.add.text(400, 300, "Error loading scoreboard", {
+  async fetchScores() {
+    try {
+      const response = await fetch("https://dodge-back.vercel.app/api/scores");
+      const data = await response.json();
+
+      this.loading = false;
+      this.loadingText.destroy();
+
+      const texts = [];
+
+      // Título (1)
+      const title = this.add.text(400, 0, "Top BEST Scores", {
+        fontFamily: 'Saira',
+        fontSize: "32px",
+        fill: "#ffffff",
+      }).setOrigin(0.5);
+      texts.push(title);
+
+      // Puntajes (máximo 5)
+      const maxScores = 5;
+      for (let i = 0; i < Math.min(data.length, maxScores); i++) {
+        const score = data[i];
+        const scoreText = this.add.text(400, 0, `${i + 1}. ${score.name} got ${score.score} and reached ${score.lvl}`, {
           fontFamily: 'Saira',
           fontSize: "24px",
           fill: "#ffffff",
         }).setOrigin(0.5);
+        texts.push(scoreText);
       }
+
+      // Menú (7)
+      const menuText = this.add.text(400, 0, "[Press ESC to return to menu]", {
+        fontFamily: 'Saira',
+        fontSize: "16px",
+        fill: "#fff",
+      }).setOrigin(0.5);
+      texts.push(menuText);
+
+      // Distribuir verticalmente según el tamaño real del canvas
+      const screenHeight = this.scale.height;
+      const screenWidth = this.scale.width;
+
+      const topMargin = 100;
+      const bottomMargin = 100;
+      const usableHeight = screenHeight - topMargin - bottomMargin;
+
+      const spacing = usableHeight / (texts.length - 1);
+
+      texts.forEach((textObj, index) => {
+        const y = topMargin + spacing * index;
+        textObj.setPosition(screenWidth / 2, y);
+      });
+
+    } catch (error) {
+      this.loading = false;
+      this.loadingText.destroy();
+      console.error("Error fetching scores:", error);
+      this.add.text(400, 300, "Error loading scoreboard", {
+        fontFamily: 'Saira',
+        fontSize: "24px",
+        fill: "#ffffff",
+      }).setOrigin(0.5);
     }
+  }
   }

@@ -81,10 +81,10 @@ export default class Menu extends Phaser.Scene {
 
             const shopItems = [
               { id: 1, name: "Shield", cost: 150, description: "Te protege del próximo hit" },
-              { id: 2, name: "Freeze", cost: 100, description: "Automáticamente congela a los círculos durante 0.5s cada 5s" },
+              { id: 2, name: "Freeze", cost: 150, description: "Automáticamente congela a los círculos durante 0.5s cada 5s" },
               { id: 3, name: "Speed", cost: 150, description: "Aumenta ligeramente la velocidad del cuadrado" },
               { id: 4, name: "Size", cost: 150, description: "Reduce ligeramente el tamaño del cuadrado" },
-              { id: 5, name: "Bomba", cost: 100, description: "Elimina todos los proyectiles del mapa" }
+              { id: 5, name: "Bomba", cost: 150, description: "Elimina todos los proyectiles del mapa" }
             ];
             this.registry.set("shopItems", shopItems);
             this.registry.set("ownedItems", []);
