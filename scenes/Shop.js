@@ -11,28 +11,22 @@ export default class Shop extends Phaser.Scene {
   }
 
   preload() {
-    this.load.plugin('rexcrtpipelineplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexcrtpipelineplugin.min.js', true);
-    this.load.plugin('rexglowfilterpipelineplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexglowfilterpipelineplugin.min.js', true);    
+    this.load.plugin('rexcrtfilterplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexcrtfilterplugin.min.js', true); 
+    this.load.plugin('rexp3fxplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexp3fxplugin.min.js', true);
   }
 
   create() {
-    const postFxPlugin = this.plugins.get('rexcrtpipelineplugin');
-    const glowPlugin  = this.plugins.get('rexglowfilterpipelineplugin');
 
     this.events.once('prerender', () => {
-      postFxPlugin.add(this.cameras.main, {
-        warpX: 0.75,
-        warpY: 0.75,
-        scanLineStrength: 0.2,
-        scanLineWidth: 1100
-      });
-      glowPlugin.add(this.cameras.main, {
-        intensity: 0.02,
-        distance: 20,
-        outerStrength: 2,
-        innerStrength: 0,
-        color: 0xffff00
-      });
+      this.cameras.main.filters.internal.addRexCrt(
+        {
+          warpX: 0.75,
+          warpY: 0.75,
+          scanLineStrength: 0.2,
+          scanLineWidth: 1100
+        }
+      )
+      this.cameras.main.filters.internal.addP3Bloom(0xffffff, 0, 0, 4, 1.1, 4);
     });
 
     this.add.text(400, 60, "SHOP", {

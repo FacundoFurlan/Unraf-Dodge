@@ -20,7 +20,7 @@ export default class Game extends Phaser.Scene {
         if(this.starTime){this.starTime.remove();}
         if(this.timerEvent){this.timerEvent.remove();}
 
-        this.ringGroup.children.iterate((wallBall) => {
+        this.ringGroup.getChildren().forEach((wallBall) => {
             if(wallBall.shotTime) {
                 wallBall.shotTime.remove()
             }
@@ -102,8 +102,8 @@ export default class Game extends Phaser.Scene {
     }
 
     preload() {
-        this.load.plugin('rexcrtpipelineplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexcrtpipelineplugin.min.js', true);
-        this.load.plugin('rexglowfilterpipelineplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexglowfilterpipelineplugin.min.js', true);
+        this.load.plugin('rexcrtfilterplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexcrtfilterplugin.min.js', true); 
+        this.load.plugin('rexp3fxplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexp3fxplugin.min.js', true);
        
         //Sounds
         this.load.audio("select", "./public/assets/retroSelect.mp3")  
@@ -137,25 +137,18 @@ export default class Game extends Phaser.Scene {
 
             this.registry.set("levelMusic", music); // La guardamos para evitar duplicados
         }
-        //EFFECTS
-        const postFxPlugin = this.plugins.get('rexcrtpipelineplugin');
-        const glowPlugin  = this.plugins.get('rexglowfilterpipelineplugin');
 
         // Espera al evento prerender de la escena, que ocurre justo antes del primer dibujado
         this.events.once('prerender', () => {
-            postFxPlugin.add(this.cameras.main, {
+            this.cameras.main.filters.internal.addRexCrt(
+            {
                 warpX: 0.75,
                 warpY: 0.75,
                 scanLineStrength: 0.2,
                 scanLineWidth: 1100
-            });
-            glowPlugin.add(this.cameras.main, {
-                intensity: 0.01,
-                distance: 20,
-                outerStrength: 20,
-                innerStrength: 0,
-                color: 0xffff00
-            });
+            }
+            )
+            this.cameras.main.filters.internal.addP3Bloom(0xffffff, 0, 0, 4, 1.1, 4);
         });
 
         // FONDO DEL JUEGO -----------------------------------------------------------------------------
@@ -310,7 +303,7 @@ export default class Game extends Phaser.Scene {
         this.enemyBullets = this.physics.add.group();
 
 
-        this.ringGroup.children.iterate((wallBall) => {
+        this.ringGroup.getChildren().forEach((wallBall) => {
             wallBall.lastShotTime = 0;
             
             wallBall.shotTime = this.time.addEvent({
@@ -613,7 +606,7 @@ export default class Game extends Phaser.Scene {
         if(!this.gameOver){
             if(!this.isFrozen){
                 this.ringRotation += 0.003;
-                this.ringGroup.children.iterate((wall) => {
+                this.ringGroup.getChildren().forEach((wall) => {
                     const angle = wall.baseAngle + this.ringRotation;
                     const x = this.ringCenter.x + Math.cos(angle) * this.ringRadius;
                     const y = this.ringCenter.y + Math.sin(angle) * this.ringRadius;
@@ -684,7 +677,7 @@ export default class Game extends Phaser.Scene {
         this.isFrozen = true;
     
         // Cambia color a azul y desactiva disparos
-        this.ringGroup.children.iterate((ball) => {
+        this.ringGroup.getChildren().forEach((ball) => {
             ball.canShoot = false;
             ball.setTexture("blueWallCircle"); // Azul
         });
@@ -693,7 +686,7 @@ export default class Game extends Phaser.Scene {
         this.isFrozen = false;
     
         // Cambia color a rojo y reactiva disparos
-        this.ringGroup.children.iterate((ball) => {
+        this.ringGroup.getChildren().forEach((ball) => {
             ball.setTexture(ball.type); // Rojo
             ball.canShoot = true;
         });
