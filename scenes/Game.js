@@ -102,8 +102,7 @@ export default class Game extends Phaser.Scene {
     }
 
     preload() {
-        this.load.plugin('rexcrtfilterplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexcrtfilterplugin.min.js', true); 
-        this.load.plugin('rexp3fxplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexp3fxplugin.min.js', true);
+        this.load.plugin('rexcrtfilterplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexcrtfilterplugin.min.js', true);
        
         //Sounds
         this.load.audio("select", "./public/assets/retroSelect.mp3")  
@@ -141,14 +140,22 @@ export default class Game extends Phaser.Scene {
         // Espera al evento prerender de la escena, que ocurre justo antes del primer dibujado
         this.events.once('prerender', () => {
             this.cameras.main.filters.internal.addRexCrt(
-            {
-                warpX: 0.75,
-                warpY: 0.75,
-                scanLineStrength: 0.2,
-                scanLineWidth: 1100
-            }
+                {
+                    warpX: 0.75,
+                    warpY: 0.75,
+                    scanLineStrength: 0.2,
+                    scanLineWidth: 1100
+                }
             )
-            this.cameras.main.filters.internal.addP3Bloom(0xffffff, 0, 0, 4, 1.1, 4);
+            Phaser.Actions.AddEffectBloom(this.cameras.main, {
+                threshold: .7,
+                blurRadius: 2,
+                blurSteps: 4,
+                blurQuality: 0,
+                blendAmount: 3,
+                blendMode: Phaser.BlendModes.ADD,
+                useInternal: false
+            })
         });
 
         // FONDO DEL JUEGO -----------------------------------------------------------------------------

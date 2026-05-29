@@ -11,8 +11,7 @@ export default class Shop extends Phaser.Scene {
   }
 
   preload() {
-    this.load.plugin('rexcrtfilterplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexcrtfilterplugin.min.js', true); 
-    this.load.plugin('rexp3fxplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexp3fxplugin.min.js', true);
+    this.load.plugin('rexcrtfilterplugin', 'https://raw.githubusercontent.com/rexrainbow/phaser3-rex-notes/master/dist/rexcrtfilterplugin.min.js', true);
   }
 
   create() {
@@ -26,7 +25,15 @@ export default class Shop extends Phaser.Scene {
           scanLineWidth: 1100
         }
       )
-      this.cameras.main.filters.internal.addP3Bloom(0xffffff, 0, 0, 4, 1.1, 4);
+      Phaser.Actions.AddEffectBloom(this.cameras.main, {
+        threshold: .4,
+        blurRadius: 2,
+        blurSteps: 4,
+        blurQuality: 0,
+        blendAmount: 3,
+        blendMode: Phaser.BlendModes.ADD,
+        useInternal: false
+      })
     });
 
     this.add.text(400, 60, "SHOP", {
